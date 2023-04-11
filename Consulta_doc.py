@@ -6,7 +6,13 @@ class Querys(object):
 		obj_conectar=conect_bd.Conexion()
 		obj_conectar.ejecutar_conn()
 		self.cursor=obj_conectar.get_cursor()
-	
+
+	def query_User(self,user,password):
+		rows=[]
+		sql=f"""SELECT * FROM USUARIO AS U INNER JOIN MEDICO AS M ON M.DNI=U.DNI AND U.USUARIO='{user}' AND U.CONTRASENIA='{password}'"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows	
 		
 	def query_Medico(self,dni):		
 		rows=[]

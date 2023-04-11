@@ -104,6 +104,7 @@ class Ventana(object):
 		etiqueta=Label(self.frame_HIS,text="Turno :",font=font1)
 		etiqueta.grid(row=3,column=4)
 		self.combo_turno=ttk.Combobox(self.frame_HIS,width=30,style="MyEntry.TEntry",values=['MAÑANA','TARDE'],state='readonly')
+		self.combo_turno.current(0)
 		self.combo_turno.grid(row=3,column=5,columnspan=2,pady=5)
 
 		Btn_Aceptar=ttk.Button(self.frame_HIS,text='Aceptar',cursor="hand2")

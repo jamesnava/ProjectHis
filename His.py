@@ -25,21 +25,15 @@ class HIS(object):
 
 	def insertar_HISCAB(self,datos):
 		rows=self.obj_consultas.consultar_Hoja('10126550')
-		manana=0
-		tarde=0
-		for valor in rows:
-			if valor.TURNO=="TARDE":
-				tarde+=1
-			elif valor.TURNO=="MAÑANA":
-				manana+=1
-
-		print(datos[3])
-		if manana==0 and tarde==1:
-			#nro=self.obj_consultas.insert_HISCABE(datos)
-			#return nro
-			pass
-		elif tarde==0:
-			pass
+		aux=True
+		turnos=[val.TURNO for val in rows]
+		if datos[3] in turnos:
+			aux=False
+		if aux:
+			nro=self.obj_consultas.insert_HISCABE(datos)
+			return nro
+		else:
+			messagebox.showinfo("Alerta","Superó la Cantidad de Hojas permitidas")
 
 	def codigo_valido(self):
 		codigo=""
