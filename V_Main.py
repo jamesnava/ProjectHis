@@ -9,7 +9,11 @@ from tkinter import messagebox
 
 class Ventana(object):
 	
-	def __init__(self):
+	def __init__(self,usuario,servicio,dni):
+		self.usuario_=usuario
+		self.servicio_=servicio
+		self.dni_=dni
+
 		self.obj_his=His.HIS()
 		self.codigo_servicio=None
 		#self.Ventana_Main=Tk()
@@ -141,11 +145,22 @@ class Ventana(object):
 		Btn_Editar=ttk.Button(self.frame_HIS,text='Editar',cursor="hand2")
 		Btn_Editar.grid(row=8,column=2)
 
-		Btn_Eliminar=ttk.Button(self.frame_HIS,text='Insertar Datos',cursor="hand2")
-		Btn_Eliminar.grid(row=8,column=4)
+		Btn_Insertar=ttk.Button(self.frame_HIS,text='Insertar Datos',cursor="hand2")
+		Btn_Insertar["command"]=self.Insert_Data
+		Btn_Insertar.grid(row=8,column=4)
 
-		Btn_Insertar=ttk.Button(self.frame_HIS,text='Eliminar',cursor="hand2")
-		Btn_Insertar.grid(row=8,column=6)
+		Btn_Eliminar=ttk.Button(self.frame_HIS,text='Eliminar',cursor="hand2")
+		Btn_Eliminar.grid(row=8,column=6)
+
+	def Insert_Data(self):
+		if self.table_Hojas.selection():
+			codigo=self.table_Hojas.item(self.table_Hojas.selection()[0])['values'][0]
+			self.obj_his.Top_InsertarData(self.Ventana_Main,codigo)
+			
+		else:
+			messagebox.showinfo("Alerta","Seleccione un ITEM!!")
+		
+
 	def datos_HISCAB(self):
 		datos=[]
 		codigo=self.obj_his.codigo_valido()		
@@ -158,7 +173,7 @@ class Ventana(object):
 		datos.append(Establecimiento)
 		datos.append(turno)
 		datos.append(self.dni_medico)		
-		nro=self.obj_his.insertar_HISCAB(datos)
+		nro=self.obj_his.insertar_HISCAB(datos,self.dni_,self.servicio_)
 		self.llenar_table()
 		if nro==1:
 			messagebox.showinfo("Alerta","Se insertó correctamente!!")
@@ -179,7 +194,7 @@ class Ventana(object):
 		for item in self.table_Hojas.get_children():
 			self.table_Hojas.delete(item)
 
-		rows=self.obj_his.Hojas_HIS()
+		rows=self.obj_his.Hojas_HIS(self.dni_,self.servicio_)
 		for valores in rows:
 			self.table_Hojas.insert("","end",values=(valores.CODCABECERA,valores.NOMBRES+" "+ valores.APELLIDOP+" "+valores.APELLIDOM,valores.ESTABLECIMIENTO,valores.TURNO,valores.NOMBRE,valores.FECHA))
 		

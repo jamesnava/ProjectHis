@@ -41,10 +41,10 @@ class Querys(object):
 		rows=self.cursor.fetchall()
 		return rows
 
-	def Hojas_HIS(self):
+	def Hojas_HIS(self,dni,servicio):
 		rows=[]
 		sql=f"""SELECT * FROM HIS_CAB AS H INNER JOIN MEDICO AS M ON H.DNI=M.DNI INNER JOIN 
-		SERVICIO AS S ON M.CODSERVICIO=S.CODSERVICIO AND H.FECHA=CONVERT(DATE,GETDATE(),102) AND S.CODSERVICIO='00001'"""
+		SERVICIO AS S ON M.CODSERVICIO=S.CODSERVICIO AND H.FECHA=CONVERT(DATE,GETDATE(),102) AND S.CODSERVICIO='{servicio}' AND H.DNI='{dni}'"""
 		self.cursor.execute(sql)
 		rows=self.cursor.fetchall()
 		return rows
