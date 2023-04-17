@@ -7,6 +7,11 @@ class Querys(object):
 		obj_conectar.ejecutar_conn()
 		self.cursor=obj_conectar.get_cursor()
 
+		#Conexion a sisgalenplus.
+		obj_conectargalen=conect_bd.ConexionGalen()
+		obj_conectargalen.ejecutar_conn()
+		self.cursor_galen=obj_conectargalen.get_cursor()
+
 	def query_User(self,user,password):
 		rows=[]
 		sql=f"""SELECT * FROM USUARIO AS U INNER JOIN MEDICO AS M ON M.DNI=U.DNI AND U.USUARIO='{user}' AND U.CONTRASENIA='{password}'"""
@@ -48,5 +53,21 @@ class Querys(object):
 		self.cursor.execute(sql)
 		rows=self.cursor.fetchall()
 		return rows
+
+	def query_cie10(self,descrip):
+		rows=[]
+		sql=f"""SELECT * FROM CIE WHERE NOMBRE LIKE '%{descrip}%'"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
+	def query_cie10Param(self,codigo):
+		rows=[]
+		sql=f"""SELECT * FROM CIE WHERE CODCIE='{codigo}'"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
+
+	
+
 
 

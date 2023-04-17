@@ -21,7 +21,7 @@ class Ventana(object):
 		self.Ventana_Main=ThemedTk(theme='radiance')
 		self.Ventana_Main.title("Ventana Principal")
 		self.height=int(self.Ventana_Main.winfo_screenheight()*0.90)
-		self.width=int(self.Ventana_Main.winfo_screenwidth()*0.85)
+		self.width=int(self.Ventana_Main.winfo_screenwidth()*0.90)
 		self.Ventana_Main.geometry("%dx%d" % (self.width,self.height)+"+0+0")
 		self.Ventana_Main.resizable(0,0)
 
@@ -68,7 +68,7 @@ class Ventana(object):
 		style=ttk.Style()
 		style.configure("MyEntry.TEntry",padding=6,foreground="#0000ff")
 
-		etiqueta=Label(self.frame_HIS,text="DNI :",font=font1)
+		etiqueta=Label(self.frame_HIS,text="DNI MEDICO:",font=font1)
 		etiqueta.grid(row=1,column=0)
 	
 		#
@@ -88,9 +88,7 @@ class Ventana(object):
 		self.entry_Servicio=ttk.Entry(self.frame_HIS,width=30,style="MyEntry.TEntry")
 		self.entry_Servicio.grid(row=2,column=2,columnspan=2,pady=5)
 
-		#evento buscar medico
-		
-		
+		#evento buscar medico		
 
 		etiqueta=Label(self.frame_HIS,text="Establecimiento :",font=font1)
 		etiqueta.grid(row=2,column=4)
@@ -138,7 +136,7 @@ class Ventana(object):
 		self.table_Hojas.heading("#6",text="FECHA")
 		self.table_Hojas.column("#6",width=250,anchor="w",stretch='NO')			
 		self.table_Hojas.grid(row=6,column=0,columnspan=20) 
-		self.table_Hojas.configure(height=20)
+		self.table_Hojas.configure(height=15)
 		self.llenar_table()
 
 
@@ -184,11 +182,14 @@ class Ventana(object):
 
 
 	def data_cabecera(self,event):
-		self.dni_medico=self.entry_Dni.get()
+		self.dni_medico=self.entry_Dni.get()		
 		rows=self.obj_his.medico_return(self.dni_medico)
-		self.entry_Medico.insert(0,rows[0].NOMBRES+" "+rows[0].APELLIDOP+" "+rows[0].APELLIDOM)
-		self.entry_Servicio.insert(0,rows[0].NOMBRE)
-		self.codigo_servicio=rows[0].CODSERVICIO
+		if len(rows)>0:
+			self.entry_Medico.insert(0,rows[0].NOMBRES+" "+rows[0].APELLIDOP+" "+rows[0].APELLIDOM)
+			self.entry_Servicio.insert(0,rows[0].NOMBRE)
+			self.codigo_servicio=rows[0].CODSERVICIO
+		else:
+			messagebox.showinfo("Notificacion","DNI NO ENCONTRADO")
 
 	def llenar_table(self):		
 		for item in self.table_Hojas.get_children():
@@ -214,6 +215,3 @@ class Ventana(object):
 	
 	
 
-if __name__=="__main__":
-	Ventana()
-		
