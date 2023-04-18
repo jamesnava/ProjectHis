@@ -56,6 +56,7 @@ class HIS(object):
 		rows=self.obj_consultas.Hojas_HIS(dni,servicio)
 		return rows
 	def Top_InsertarData(self,ventana,codigo):
+		self.codigo_HISCABE=codigo
 		font1=('Comic Sans MS',12,'bold')
 		self.TopInsert=Toplevel(ventana)
 		self.TopInsert.geometry("950x700")
@@ -66,9 +67,10 @@ class HIS(object):
 		style.configure("MyEntry.TEntry",padding=6,foreground="#0000ff")
 
 		etiqueta=Label(self.TopInsert,text="DNI PACIENTE :",font=font1)
-		etiqueta.grid(row=1,column=0)	
+		etiqueta.grid(row=1,column=0)
+		self.dni_p=StringVar()	
 
-		self.entry_DniPaciente=ttk.Entry(self.TopInsert,width=30,style="MyEntry.TEntry")
+		self.entry_DniPaciente=ttk.Entry(self.TopInsert,width=30,style="MyEntry.TEntry",textvariable=self.dni_p)
 		self.entry_DniPaciente.grid(row=1,column=1,columnspan=3,pady=5)
 		self.entry_DniPaciente.bind("<Return>",lambda event:self.event_searchPaciente(event))
 		
@@ -213,8 +215,9 @@ class HIS(object):
 		self.table_datos.configure(height=5)
 
 		btn_addDatos=ttk.Button(marco_perimetro,width=15,text="Agregar")
+		btn_addDatos["command"]=self.insertData
 		btn_addDatos.grid(row=5,column=4)
-		btn_cancleDatos=ttk.Button(marco_perimetro,width=15,text="Cancelar")
+		btn_cancleDatos=ttk.Button(marco_perimetro,width=15,text="Cancelar")		
 		btn_cancleDatos.grid(row=5,column=6)
 
 
@@ -223,7 +226,7 @@ class HIS(object):
 		today = date.today()		
 		if len(dni)>0:
 			try:
-				rows=self.obj_consultaGalen.query_Paciente(dni)				
+				rows=self.obj_consultaGalen.query_Paciente(dni)								
 				self.entry_NombrePaciente.insert(0,rows[0].PrimerNombre)
 				self.entry_ApellidosPaciente.insert(0,rows[0].ApellidoPaterno+" "+rows[0].ApellidoMaterno)
 				self.entry_HistoriaPaciente.insert(0,rows[0].NroHistoriaClinica)
@@ -296,9 +299,51 @@ class HIS(object):
 			self.entry_CIE.delete(0,'end')
 			self.entry_Descripcion.delete(0,'end')
 	def Insertar_diagnosticos(self):
-		self.table_datos.insert("",'end',values=('hola','descripcion','lab','tipo'))
-			
-	
-	
+		codigo_cie=self.entry_CIE.get()
+		descripcion=self.entry_Descripcion.get()
+		tipo=self.entry_tipoDX.get()
+		lab=self.entry_LAB.get()
+		self.table_datos.insert("",'end',values=(codigo_cie,descripcion,tipo,lab))
 
+	def insertData(self):
+		#recuperando valores
+		dni_p=self.entry_DniPaciente.get()
+		nombre_p=self.entry_NombrePaciente.get()
+		apellidos_p=self.entry_ApellidosPaciente.get()
+		hcl_p=self.entry_HistoriaPaciente.get()
+		financiamiento_p=self.combo_financiamiento.get()
+		Etnia_p=self.entry_EtniaPaciente.get()
+		distritopro_p=self.entry_DistritoProcedencia.get()
+		centrop_p=self.entry_CentroPoblado.get()
+		edad_p=self.entry_EdadPaciente.get()
+		sexo_p=self.entry_GENERO.get()
+		pab_p=self.entry_Pab.get()
+		Establecimiento_p=self.entry_Establecimiento.get()
+		servicio_p=self.entry_Servicio.get()
+		codcabecera_p=self.codigo_HISCABE
+		peso_p=self.entry_peso.get()
+		talla_p=self.entry_talla.get()
+		hb_p=self.entry_Hb.get()
+		pc_p=self.entry_PC.get()
+		datos=[dni_p,nombre_p,apellidos_p,hcl_p,financiamiento_p,Etnia_p,distritopro_p,centrop_p,edad_p,sexo_p,pab_p,Establecimiento_p,servicio_p,codcabecera_p,peso_p,talla_p,hb_p,pc_p]
+		idrows=self.obj_consultas.query_idMAXHIS_DETA()
+		id_deta=0
+		if idrows[0].codigo!=None:
+			id_deta=idrows[0].codigo+1
+		else:
+			id_deta=1
+
+		try:
+			nro=self.obj_consultas.insert_HISDETA(id_deta,datos)
+			messagebox.showinfo("Alerta","Se insertó correctamente")			
+		except Exception as e:
+			messagebox.showerror("error!!",e)
+	def diagnosticos_data(self):
+		diagnosticos=[]
+		for item in self.table_datos.get_children():
+			valores=self.table_datos.item(item)["values"]
+			diagnosticos.append(valores)
+		return diagnosticos
+
+		
 		

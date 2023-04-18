@@ -66,6 +66,19 @@ class Querys(object):
 		self.cursor.execute(sql)
 		rows=self.cursor.fetchall()
 		return rows
+	def query_idMAXHIS_DETA(self):
+		rows=[]
+		sql=f"""SELECT MAX(ID_DETA) AS codigo FROM HIS_DETA"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
+
+	def insert_HISDETA(self,id_deta,datos):				
+		sql=f"""INSERT INTO HIS_DETA VALUES({id_deta},'{datos[0]}','{datos[1]}','{datos[2]}','{datos[3]}','{datos[4]}','{datos[5]}','{datos[6]}','{datos[7]}',
+		'{datos[8]}','{datos[9]}','{datos[10]}','{datos[11]}','{datos[12]}','{datos[13]}','{datos[14]}','{datos[15]}','{datos[16]}','{datos[17]}')"""
+		self.cursor.execute(sql)		
+		self.cursor.commit()
+		
 
 	
 
