@@ -5,12 +5,14 @@ import random
 from tkinter import ttk
 from datetime import date
 import Consulta_Galen
+import Operaciones
 
 class HIS(object):
 	
 	def __init__(self):
 		self.obj_consultas=Consulta_doc.Querys()
-		self.obj_consultaGalen=Consulta_Galen.QuerysG()		
+		self.obj_consultaGalen=Consulta_Galen.QuerysG()
+		self.obj_operaciones=Operaciones.operaciones()		
 	
 	def medico_return(self,dni):
 		try:
@@ -55,8 +57,9 @@ class HIS(object):
 	def Hojas_HIS(self,dni,servicio):
 		rows=self.obj_consultas.Hojas_HIS(dni,servicio)
 		return rows
-	def Top_InsertarData(self,ventana,codigo):
+	def Top_InsertarData(self,ventana,codigo,servicio):
 		self.codigo_HISCABE=codigo
+		self.codigo_servicio=servicio
 		font1=('Comic Sans MS',12,'bold')
 		self.TopInsert=Toplevel(ventana)
 		self.TopInsert.geometry("950x700")
@@ -157,14 +160,12 @@ class HIS(object):
 
 		etiqueta=Label(self.TopInsert,text="Establecimiento:",font=font1)
 		etiqueta.grid(row=8,column=0)
-		self.entry_Establecimiento=ttk.Combobox(self.TopInsert,width=30,style="MyEntry.TEntry",values=['N','C','R'],state="readonly")
-		self.entry_Establecimiento.current(0)
+		self.entry_Establecimiento=ttk.Entry(self.TopInsert,width=30,style="MyEntry.TEntry",state="readonly")		
 		self.entry_Establecimiento.grid(row=8,column=1,columnspan=2,pady=5)
 
 		etiqueta=Label(self.TopInsert,text="Servicio:",font=font1)
 		etiqueta.grid(row=8,column=4)
-		self.entry_Servicio=ttk.Combobox(self.TopInsert,width=30,style="MyEntry.TEntry",values=['N','C','R'],state="readonly")
-		self.entry_Servicio.current(0)
+		self.entry_Servicio=ttk.Entry(self.TopInsert,width=30,style="MyEntry.TEntry",state="readonly")		
 		self.entry_Servicio.grid(row=8,column=5,columnspan=2,pady=5)
 
 		marco_perimetro=LabelFrame(self.TopInsert,text="Diagnosticos",font=("Helvetica",11,"italic"))
@@ -223,7 +224,8 @@ class HIS(object):
 
 	def event_searchPaciente(self,event):
 		dni=self.entry_DniPaciente.get()
-		today = date.today()		
+		today = date.today()
+		rows=self.obj_consultaGalen.query_Paciente(dni)				
 		if len(dni)>0:
 			try:
 				rows=self.obj_consultaGalen.query_Paciente(dni)								
@@ -236,7 +238,14 @@ class HIS(object):
 				fechanacimiento=rows[0].FECHANACIMIENTO				
 				edad=int(today.year)-int(fechanacimiento[:4])
 				self.entry_EdadPaciente.insert(0,edad)
+				establecimiento,servicio=self.obj_operaciones.VEstablecimiento(dni,self.codigo_servicio)
+				self.entry_Establecimiento["state"]="normal"
+				self.entry_Establecimiento.insert(0,establecimiento)
+				self.entry_Establecimiento["state"]="readonly"
 
+				self.entry_Servicio["state"]="normal"
+				self.entry_Servicio.insert(0,servicio)
+				self.entry_Servicio["state"]="readonly"
 			except Exception as e:
 				messagebox.showerror("Alerta",f"error {e}")
 		else:
@@ -253,7 +262,7 @@ class HIS(object):
 
 		label_title=Label(self.TopCIE,text='Buscar')
 		label_title.place(x=20,y=20)
-		self.Entry_buscar_General=Entry(self.TopCIE,width=30)
+		self.Entry_buscar_General=ttk.Entry(self.TopCIE,width=30)
 		self.Entry_buscar_General.focus()
 		self.Entry_buscar_General.place(x=80,y=20)
 		self.Entry_buscar_General.bind('<Key>',self.buscar_cie)		
@@ -331,11 +340,24 @@ class HIS(object):
 		if idrows[0].codigo!=None:
 			id_deta=idrows[0].codigo+1
 		else:
-			id_deta=1
-
+			id_deta=1		
 		try:
-			nro=self.obj_consultas.insert_HISDETA(id_deta,datos)
-			messagebox.showinfo("Alerta","Se insertó correctamente")			
+			#comprobar la existencia
+			existencia_paciente=self.obj_consultas.exist_Paciente(self.codigo_HISCABE,dni_p)	
+			if len(existencia_paciente)==0:						
+				nro=self.obj_consultas.insert_HISDETA(id_deta,datos)
+				rows_diagnosticos=self.diagnosticos_data()
+				for i in range(len(rows_diagnosticos)):				
+					rows_DIAGNOSTICO=self.obj_consultas.query_idMAX_DIAGNOSTICOS()
+					if rows_DIAGNOSTICO[0].codigo!=None:
+						id_diag=rows_DIAGNOSTICO[0].codigo+1
+					else:
+						id_diag=1			
+					self.obj_consultas.insert_DIAGNOSTICOS(id_diag,id_deta,rows_diagnosticos[i])
+				messagebox.showinfo("Alerta","Se insertó correctamente")
+			else:
+				messagebox.showerror("Alerta","ya se registro el paciente!!")
+
 		except Exception as e:
 			messagebox.showerror("error!!",e)
 	def diagnosticos_data(self):
@@ -344,6 +366,9 @@ class HIS(object):
 			valores=self.table_datos.item(item)["values"]
 			diagnosticos.append(valores)
 		return diagnosticos
+
+	def validar_Centro(self):
+		pass
 
 		
 		

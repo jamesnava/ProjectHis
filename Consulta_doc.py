@@ -78,7 +78,56 @@ class Querys(object):
 		'{datos[8]}','{datos[9]}','{datos[10]}','{datos[11]}','{datos[12]}','{datos[13]}','{datos[14]}','{datos[15]}','{datos[16]}','{datos[17]}')"""
 		self.cursor.execute(sql)		
 		self.cursor.commit()
-		
+
+	def query_idMAX_DIAGNOSTICOS(self):
+		rows=[]
+		sql=f"""SELECT MAX(Id_Diagnostico) AS codigo FROM DIAGNOSTICOS"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
+
+	def insert_DIAGNOSTICOS(self,id_DIAGNOSTICO,id_deta,datos):				
+		sql=f"""INSERT INTO DIAGNOSTICOS VALUES({id_DIAGNOSTICO},'{datos[1]}','{datos[2]}','{datos[3]}','{datos[0]}',{id_deta})"""
+		self.cursor.execute(sql)		
+		self.cursor.commit()
+
+	def exist_Paciente(self,codigo_cabe,dni):
+		rows=[]
+		sql=f"""SELECT HD.DNI_PAC FROM HIS_CAB AS HC INNER JOIN HIS_DETA AS HD ON 
+		HC.CODCABECERA=HD.CODCABECERA AND HC.CODCABECERA='{codigo_cabe}' AND HD.DNI_PAC='{dni}'"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
+	#comprobar la existencia de un paciente
+	def existencia_pacienteBD(self,dni):
+		rows=[]
+		sql=f"""SELECT HD.DNI_PAC FROM HIS_CAB AS HC INNER JOIN HIS_DETA AS HD ON 
+		HC.CODCABECERA=HD.CODCABECERA AND HD.DNI_PAC='{dni}'"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
+	def existencia_pacienteBDAnio(self,dni):
+		rows=[]
+		sql=f"""SELECT HD.DNI_PAC FROM HIS_CAB AS HC INNER JOIN HIS_DETA AS HD ON HC.CODCABECERA=HD.CODCABECERA AND
+		 HD.DNI_PAC='{dni}' AND YEAR(HC.FECHA)=YEAR(GETDATE())"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
+
+	def existencia_pacienteBDServicio(self,dnipaciente,servicio):
+		rows=[]
+		sql=f"""SELECT YEAR(FECHA) AS fecha FROM HIS_CAB AS HC INNER JOIN HIS_DETA AS HD ON HC.CODCABECERA=HD.CODCABECERA INNER JOIN MEDICO AS M 
+		ON HC.DNI=M.DNI AND HD.DNI_PAC='{dnipaciente}' AND M.CODSERVICIO='{servicio}'"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
+	def existencia_pacienteBDServicioAnio(self,dnipaciente,servicio):
+		rows=[]
+		sql=f"""SELECT YEAR(FECHA) AS fecha FROM HIS_CAB AS HC INNER JOIN HIS_DETA AS HD ON HC.CODCABECERA=HD.CODCABECERA INNER JOIN MEDICO AS M 
+		ON HC.DNI=M.DNI AND HD.DNI_PAC='{dnipaciente}' AND M.CODSERVICIO='{servicio}' AND YEAR(HC.FECHA)=YEAR(GETDATE())"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
 
 	
 

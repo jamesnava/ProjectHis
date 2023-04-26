@@ -14,6 +14,7 @@ class Ventana(object):
 		self.servicio_=servicio
 		self.dni_=dni
 
+
 		self.obj_his=His.HIS()
 		self.codigo_servicio=None
 		#self.Ventana_Main=Tk()
@@ -153,7 +154,7 @@ class Ventana(object):
 	def Insert_Data(self):
 		if self.table_Hojas.selection():
 			codigo=self.table_Hojas.item(self.table_Hojas.selection()[0])['values'][0]
-			self.obj_his.Top_InsertarData(self.Ventana_Main,codigo)
+			self.obj_his.Top_InsertarData(self.Ventana_Main,codigo,self.servicio_)
 			
 		else:
 			messagebox.showinfo("Alerta","Seleccione un ITEM!!")
