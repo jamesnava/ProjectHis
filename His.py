@@ -199,6 +199,7 @@ class HIS(object):
 		btn_addDX.grid(row=2,column=4)
 
 		btn_quitDX=ttk.Button(marco_perimetro,width=15,text="Quitar")
+		btn_quitDX["command"]=self.delete_tableSelected
 		btn_quitDX.grid(row=2,column=6)
 
 
@@ -221,6 +222,12 @@ class HIS(object):
 		btn_cancleDatos=ttk.Button(marco_perimetro,width=15,text="Cancelar")		
 		btn_cancleDatos.grid(row=5,column=6)
 
+	def delete_tableSelected(self):
+		try:
+			selected_item = self.table_datos.selection()[0]
+			self.table_datos.delete(selected_item)	
+		except Exception as e:
+			messagebox.showinfo("Alerta","Seleccione un Item")		
 
 	def event_searchPaciente(self,event):
 		dni=self.entry_DniPaciente.get()
@@ -228,6 +235,7 @@ class HIS(object):
 		rows=self.obj_consultaGalen.query_Paciente(dni)				
 		if len(dni)>0:
 			try:
+				self.delete_Entrys()
 				rows=self.obj_consultaGalen.query_Paciente(dni)								
 				self.entry_NombrePaciente.insert(0,rows[0].PrimerNombre)
 				self.entry_ApellidosPaciente.insert(0,rows[0].ApellidoPaterno+" "+rows[0].ApellidoMaterno)
@@ -239,17 +247,36 @@ class HIS(object):
 				edad=int(today.year)-int(fechanacimiento[:4])
 				self.entry_EdadPaciente.insert(0,edad)
 				establecimiento,servicio=self.obj_operaciones.VEstablecimiento(dni,self.codigo_servicio)
-				self.entry_Establecimiento["state"]="normal"
+				
 				self.entry_Establecimiento.insert(0,establecimiento)
 				self.entry_Establecimiento["state"]="readonly"
 
-				self.entry_Servicio["state"]="normal"
+				
 				self.entry_Servicio.insert(0,servicio)
 				self.entry_Servicio["state"]="readonly"
 			except Exception as e:
 				messagebox.showerror("Alerta",f"error {e}")
 		else:
 			messagebox.showinfo("Alerta","Ingrese el DNI")
+	def delete_Entrys(self):
+		self.entry_NombrePaciente["state"]="normal"
+		self.entry_NombrePaciente.delete(0,"end")
+		self.entry_ApellidosPaciente["state"]="normal"
+		self.entry_ApellidosPaciente.delete(0,"end")
+		self.entry_HistoriaPaciente["state"]="normal"
+		self.entry_HistoriaPaciente.delete(0,"end")
+		self.entry_GENERO["state"]="normal"
+		self.entry_GENERO.delete(0,"end")
+		self.entry_EtniaPaciente["state"]="normal"
+		self.entry_EtniaPaciente.delete(0,"end")
+		self.entry_DistritoProcedencia["state"]="normal"
+		self.entry_DistritoProcedencia.delete(0,"end")
+		self.entry_Establecimiento["state"]="normal"
+		self.entry_Establecimiento.delete(0,"end")
+		self.entry_Servicio["state"]="normal"
+		self.entry_Servicio.delete(0,"end")
+		self.entry_EdadPaciente["state"]="normal"
+		self.entry_EdadPaciente.delete(0,"end")
 
 	def Top_searchCie(self,event):
 		self.TopCIE=Toplevel(self.TopInsert)
@@ -274,9 +301,7 @@ class HIS(object):
 		self.table_CIE.heading("#2",text="CIE")
 		self.table_CIE.column("#2",width=200,anchor="center")										
 		self.table_CIE.place(x=10,y=70,width=700,height=290)
-		self.table_CIE.bind('<<TreeviewSelect>>',self.itemTable_selected)			
-		
-
+		self.table_CIE.bind('<<TreeviewSelect>>',self.itemTable_selected)
 	def buscar_cie(self,event):
 		self.borrar_tabla()
 		parametro=''		
@@ -295,6 +320,7 @@ class HIS(object):
 			self.entry_CIE.insert(0,self.table_CIE.item(self.table_CIE.selection()[0],option='values')[0])
 			self.entry_Descripcion.delete(0,'end')
 			self.entry_Descripcion.insert(0,self.table_CIE.item(self.table_CIE.selection()[0],option='values')[1])
+			self.entry_LAB.delete(0,"end")
 		self.TopCIE.destroy()
 
 	def fill_DX(self,event):
@@ -312,7 +338,18 @@ class HIS(object):
 		descripcion=self.entry_Descripcion.get()
 		tipo=self.entry_tipoDX.get()
 		lab=self.entry_LAB.get()
-		self.table_datos.insert("",'end',values=(codigo_cie,descripcion,tipo,lab))
+		tabladatos=self.diagnosticos_data()
+		aux=False
+		if len(tabladatos)>0:			
+			for i in range(len(tabladatos)):
+				if tabladatos[i][0]==codigo_cie:
+					aux=True
+					break
+
+		if not aux:
+			self.table_datos.insert("",'end',values=(codigo_cie,descripcion,tipo,lab))
+		else:
+			messagebox.showerror("Alerta","el diagnostico ya existe!!")
 
 	def insertData(self):
 		#recuperando valores
@@ -344,22 +381,28 @@ class HIS(object):
 		try:
 			#comprobar la existencia
 			existencia_paciente=self.obj_consultas.exist_Paciente(self.codigo_HISCABE,dni_p)	
-			if len(existencia_paciente)==0:						
-				nro=self.obj_consultas.insert_HISDETA(id_deta,datos)
+			if len(existencia_paciente)==0:				
 				rows_diagnosticos=self.diagnosticos_data()
-				for i in range(len(rows_diagnosticos)):				
-					rows_DIAGNOSTICO=self.obj_consultas.query_idMAX_DIAGNOSTICOS()
-					if rows_DIAGNOSTICO[0].codigo!=None:
-						id_diag=rows_DIAGNOSTICO[0].codigo+1
-					else:
-						id_diag=1			
-					self.obj_consultas.insert_DIAGNOSTICOS(id_diag,id_deta,rows_diagnosticos[i])
-				messagebox.showinfo("Alerta","Se insertó correctamente")
+				if len(rows_diagnosticos)>0:
+					nro=self.obj_consultas.insert_HISDETA(id_deta,datos)
+					for i in range(len(rows_diagnosticos)):				
+						rows_DIAGNOSTICO=self.obj_consultas.query_idMAX_DIAGNOSTICOS()
+						if rows_DIAGNOSTICO[0].codigo!=None:
+							id_diag=rows_DIAGNOSTICO[0].codigo+1
+						else:
+							id_diag=1			
+						self.obj_consultas.insert_DIAGNOSTICOS(id_diag,id_deta,rows_diagnosticos[i])
+						self.TopInsert.destroy()					
+					messagebox.showinfo("Alerta","Se insertó correctamente")
+				else:
+					messagebox.showerror("Alerta","Al menos inserte un diagnostico")
 			else:
-				messagebox.showerror("Alerta","ya se registro el paciente!!")
+				messagebox.showerror("Alerta","ya se registro al paciente!!")
+				self.TopInsert.destroy()
 
 		except Exception as e:
 			messagebox.showerror("error!!",e)
+
 	def diagnosticos_data(self):
 		diagnosticos=[]
 		for item in self.table_datos.get_children():
@@ -367,7 +410,7 @@ class HIS(object):
 			diagnosticos.append(valores)
 		return diagnosticos
 
-	def validar_Centro(self):
+	def Top_EditarData(self,codigo,id_deta):
 		pass
 
 		

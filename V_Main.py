@@ -4,6 +4,7 @@ from ttkthemes import ThemedTk
 from ttkthemes import ThemedStyle
 from tkcalendar import Calendar,DateEntry
 import His
+import Consulta_doc
 from tkinter import messagebox
 
 
@@ -16,6 +17,7 @@ class Ventana(object):
 
 
 		self.obj_his=His.HIS()
+		self.obj_consult=Consulta_doc.Querys()
 		self.codigo_servicio=None
 		#self.Ventana_Main=Tk()
 		
@@ -45,9 +47,7 @@ class Ventana(object):
 		# creando menu Acciones
 		self.M_Acciones=Menu(self.Barra_Menu,tearoff=False)
 		self.M_Acciones.add_command(label='Insertar His',command=self.Frame_NewHIS)
-		self.M_Acciones.add_command(label='Bandeja de Entrada',)				
-		self.M_Acciones.add_command(label='Seguimiento')
-		self.M_Acciones.add_command(label='Historial de Documentos')		
+		self.M_Acciones.add_command(label='Ver Hojas',)			
 		self.M_Acciones.add_separator()		
 		self.Barra_Menu.add_cascade(label='His Minsa',menu=self.M_Acciones)				
 		#Ayuda...
@@ -61,6 +61,7 @@ class Ventana(object):
 	def Frame_NewHIS(self):
 		self.frame_HIS=Frame(self.Ventana_Main,width=int(self.width*0.99),height=int(self.height*0.99))
 		self.frame_HIS.place(x=0,y=0)
+		self.frame_HIS.grid_propagate(False)
 		font=('Comic Sans MS',18,'bold')
 		etiqueta=Label(self.frame_HIS,text="GENERAR HOJA DE ATENCION HIS",font=font)
 		etiqueta.grid(row=0,column=0,columnspan=6,sticky='e')
@@ -141,8 +142,9 @@ class Ventana(object):
 		self.llenar_table()
 
 
-		Btn_Editar=ttk.Button(self.frame_HIS,text='Editar',cursor="hand2")
-		Btn_Editar.grid(row=8,column=2)
+		Btn_verHoja=ttk.Button(self.frame_HIS,text='Ver Hoja',cursor="hand2")
+		Btn_verHoja["command"]=self.Frame_HojaHis
+		Btn_verHoja.grid(row=8,column=2)
 
 		Btn_Insertar=ttk.Button(self.frame_HIS,text='Insertar Datos',cursor="hand2")
 		Btn_Insertar["command"]=self.Insert_Data
@@ -151,14 +153,73 @@ class Ventana(object):
 		Btn_Eliminar=ttk.Button(self.frame_HIS,text='Eliminar',cursor="hand2")
 		Btn_Eliminar.grid(row=8,column=6)
 
+	def Frame_HojaHis(self):
+		font=('Comic Sans MS',18,'bold')
+		if self.table_Hojas.selection():
+			codigo1=self.table_Hojas.item(self.table_Hojas.selection()[0])['values'][0]
+			self.frame_HOJAHIS=Frame(self.Ventana_Main,width=int(self.width*0.99),height=int(self.height*0.99))
+			self.frame_HOJAHIS.grid_propagate(False)
+			self.frame_HOJAHIS.place(x=0,y=0)
+
+			etiqueta=Label(self.frame_HOJAHIS,text="PACIENTES REGISTRADOS EN LA HOJA",font=font)
+			etiqueta.grid(row=5,column=0,columnspan=6,sticky='e')
+			self.t_Hojas=ttk.Treeview(self.frame_HOJAHIS,height=5,columns=('#1','#2','#3','#4'),show='headings')
+			self.t_Hojas.heading("#1",text="Codigo")
+			self.t_Hojas.column("#1",width=100,anchor="w",stretch='NO')	
+			self.t_Hojas.heading("#2",text="Documento")
+			self.t_Hojas.column("#2",width=300,anchor="w",stretch='NO')
+			self.t_Hojas.heading("#3",text="Nombres")
+			self.t_Hojas.column("#3",width=200,anchor="w",stretch='NO')			
+			self.t_Hojas.heading("#4",text="Fecha")
+			self.t_Hojas.column("#4",width=250,anchor="w",stretch='NO')					
+			self.t_Hojas.grid(row=6,column=0,columnspan=20) 
+			self.t_Hojas.configure(height=30)
+
+			#llenar table...
+			for item in self.t_Hojas.get_children():
+				self.t_Hojas.delete(item)
+
+			ro_ws=self.obj_consult.datos_Hoja(codigo1)
+			for valores in ro_ws:
+				self.t_Hojas.insert("","end",values=(valores.ID_DETA,valores.DNI_PAC,valores.NOMBRE+" "+valores.APELLIDOS,valores.FECHA))
+
+
+			btn_Imprimir=ttk.Button(self.frame_HOJAHIS,text="Imprimir",cursor="hand2")
+			btn_Imprimir.grid(row=8,column=2)
+
+			btn_Editar=ttk.Button(self.frame_HOJAHIS,text="Editar",cursor="hand2")
+			btn_Editar.grid(row=8,column=4)
+			
+			btn_Eliminar=ttk.Button(self.frame_HOJAHIS,text="Eliminar",cursor="hand2")
+			btn_Eliminar["command"]=lambda:self.delete_dataHIS(codigo1)
+			btn_Eliminar.grid(row=8,column=6)
+			
+		else:
+			messagebox.showinfo("Alerta","Seleccione un ITEM!!")
+	def delete_dataHIS(self,codigo1):
+		iddeta=self.t_Hojas.item(self.t_Hojas.selection()[0])['values'][0]
+		nro_diagnostico=0		
+		nro_diagnostico=self.obj_consult.delete_diagnostico(iddeta)
+		if nro_diagnostico>0:
+			nro_deta=0
+			nro_deta=self.obj_consult.delete_deta(iddeta)
+			if nro_deta>0:
+				messagebox.showinfo("Alerta","Operacion Exitosa")
+
+				for item in self.t_Hojas.get_children():
+					self.t_Hojas.delete(item)
+
+				ro_ws=self.obj_consult.datos_Hoja(codigo1)
+				for valores in ro_ws:
+					self.t_Hojas.insert("","end",values=(valores.ID_DETA,valores.DNI_PAC,valores.NOMBRE+" "+valores.APELLIDOS,valores.FECHA))
+
 	def Insert_Data(self):
 		if self.table_Hojas.selection():
 			codigo=self.table_Hojas.item(self.table_Hojas.selection()[0])['values'][0]
 			self.obj_his.Top_InsertarData(self.Ventana_Main,codigo,self.servicio_)
 			
 		else:
-			messagebox.showinfo("Alerta","Seleccione un ITEM!!")
-		
+			messagebox.showinfo("Alerta","Seleccione un ITEM!!"'')		
 
 	def datos_HISCAB(self):
 		datos=[]

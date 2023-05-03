@@ -14,8 +14,7 @@ class operaciones(object):
 
 			if len(rowsAnio)>0:
 				Establecimiento="C"				
-				rowsServicioNow=self.obj_consultas.existencia_pacienteBDServicioAnio(dni,ser)
-				print(rowsServicioNow)
+				rowsServicioNow=self.obj_consultas.existencia_pacienteBDServicioAnio(dni,ser)				
 				if len(rowsServicioNow)>0:
 					servicio="C"
 				else:

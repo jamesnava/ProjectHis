@@ -1,4 +1,5 @@
 import conect_bd
+from tkinter import messagebox
 
 class Querys(object):
 
@@ -128,6 +129,44 @@ class Querys(object):
 		self.cursor.execute(sql)
 		rows=self.cursor.fetchall()
 		return rows
+	def query_DIAGNOSTICOS(self,iddeta):
+		rows=[]
+		sql=f"""SELECT * FROM DIAGNOSTICOS WHERE ID_DETA={iddeta}"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
+
+	def datos_Hoja(self,codigo):
+		rows=[]
+		sql=f"""SELECT * FROM HIS_CAB AS HC INNER JOIN HIS_DETA AS HD ON HC.CODCABECERA=HC.CODCABECERA AND HC.CODCABECERA='{codigo}'"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
+	def datos_HojaV2(self,codigo):
+		rows=[]
+		sql=f"""SELECT * FROM HIS_CAB AS HC INNER JOIN HIS_DETA AS HD ON HC.CODCABECERA=HD.CODCABECERA INNER JOIN MEDICO AS M ON HC.DNI=M.DNI AND HC.CODCABECERA='{codigo}'"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
+
+	def delete_deta(self,iddeta):
+		try:
+			sql=f"""DELETE FROM HIS_DETA WHERE ID_DETA={iddeta}"""
+			self.cursor.execute(sql)
+			self.cursor.commit()
+			return self.cursor.rowcount
+		except Exception as e:
+			messagebox.showerror("Notificacion",f"No pudo realizarse la operacion {e}")
+
+	def delete_diagnostico(self,iddeta):
+		try:
+			sql=f"""DELETE FROM DIAGNOSTICOS WHERE ID_DETA={iddeta}"""
+			self.cursor.execute(sql)
+			self.cursor.commit()
+			return self.cursor.rowcount
+		except Exception as e:
+			messagebox.showerror("Alerta",f"No pudo realizarse la operacion!! {e}")
+			
 
 	
 
