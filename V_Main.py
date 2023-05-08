@@ -5,6 +5,7 @@ from ttkthemes import ThemedStyle
 from tkcalendar import Calendar,DateEntry
 import His
 import Consulta_doc
+import reporte
 from tkinter import messagebox
 
 
@@ -24,7 +25,7 @@ class Ventana(object):
 		self.Ventana_Main=ThemedTk(theme='radiance')
 		self.Ventana_Main.title("Ventana Principal")
 		self.height=int(self.Ventana_Main.winfo_screenheight()*0.90)
-		self.width=int(self.Ventana_Main.winfo_screenwidth()*0.90)
+		self.width=int(self.Ventana_Main.winfo_screenwidth()*0.80)
 		self.Ventana_Main.geometry("%dx%d" % (self.width,self.height)+"+0+0")
 		self.Ventana_Main.resizable(0,0)
 
@@ -47,7 +48,7 @@ class Ventana(object):
 		# creando menu Acciones
 		self.M_Acciones=Menu(self.Barra_Menu,tearoff=False)
 		self.M_Acciones.add_command(label='Insertar His',command=self.Frame_NewHIS)
-		self.M_Acciones.add_command(label='Ver Hojas',)			
+		self.M_Acciones.add_command(label='Ver Hojas',command=self.Frame_ListaHojasHis)			
 		self.M_Acciones.add_separator()		
 		self.Barra_Menu.add_cascade(label='His Minsa',menu=self.M_Acciones)				
 		#Ayuda...
@@ -57,6 +58,78 @@ class Ventana(object):
 		self.M_Ayuda.add_separator()		
 		self.Barra_Menu.add_cascade(label='Ayuda',menu=self.M_Ayuda)		
 		self.Ventana_Main.mainloop()
+
+	def Frame_ListaHojasHis(self):
+		self.frame_HojasHIS=Frame(self.Ventana_Main,width=int(self.width*0.99),height=int(self.height*0.99))
+		self.frame_HojasHIS.place(x=0,y=0)
+		self.frame_HojasHIS.grid_propagate(False)
+
+		font=('Comic Sans MS',18,'bold')
+		etiqueta=Label(self.frame_HojasHIS,text="LISTA DE HOJAS HIS",font=font)
+		etiqueta.grid(row=0,column=0,columnspan=6,sticky='e')
+		font1=('Comic Sans MS',12,'bold')
+
+		etiqueta=Label(self.frame_HojasHIS,text="Fecha :")
+		etiqueta.grid(row=4,column=2)
+
+		self.dateL=StringVar()
+		self.calendarL=DateEntry(self.frame_HojasHIS,selectmode='day',textvariable=self.dateL,date_pattern="dd/mm/yy")
+		self.calendarL.grid(row=4,column=3)
+
+		etiqueta=Label(self.frame_HojasHIS,text="Servicio :")
+		etiqueta.grid(row=4,column=4)
+	
+		self.combo_ServicioL=ttk.Combobox(self.frame_HojasHIS)
+		self.combo_ServicioL.grid(row=4,column=5)
+		self.combo_ServicioL.bind("<<ComboboxSelected>>",self.event_ComboServicio)
+		self.llenarcomboServicio()
+
+		style=ttk.Style()
+		style.configure("MyEntry.TEntry",padding=6,foreground="#0000ff")	
+
+		self.TListaHojas=ttk.Treeview(self.frame_HojasHIS,height=5,columns=('#1','#2','#3','#4','#5','#6'),show='headings')
+		
+		self.TListaHojas.heading("#1",text="CODIGO")
+		self.TListaHojas.column("#1",width=100,anchor="w",stretch='NO')	
+		self.TListaHojas.heading("#2",text="MEDICO")
+		self.TListaHojas.column("#2",width=300,anchor="w",stretch='NO')
+		self.TListaHojas.heading("#3",text="ESTABLECIMIENTO")
+		self.TListaHojas.column("#3",width=200,anchor="w",stretch='NO')
+		self.TListaHojas.heading("#4",text="TURNO")
+		self.TListaHojas.column("#4",width=100,anchor="w",stretch='NO')
+		self.TListaHojas.heading("#5",text="SERVICIO")
+		self.TListaHojas.column("#5",width=250,anchor="w",stretch='NO')
+		self.TListaHojas.heading("#6",text="FECHA")
+		self.TListaHojas.column("#6",width=250,anchor="w",stretch='NO')			
+		self.TListaHojas.grid(row=6,column=0,columnspan=20) 
+		self.TListaHojas.configure(height=15)
+
+		btn_ExportarData=ttk.Button(self.frame_HojasHIS,text="Exportar")
+		btn_ExportarData["command"]=self.Exportar_data
+		btn_ExportarData.grid(row=8,column=2)
+
+		Btn_verHoja=ttk.Button(self.frame_HojasHIS,text="Ver Hoja")
+		Btn_verHoja["command"]=self.ver_DatosHoja
+		Btn_verHoja.grid(row=8,column=3)
+
+	def ver_DatosHoja(self):
+		if self.TListaHojas.selection():
+			codigo1=self.TListaHojas.item(self.TListaHojas.selection()[0])['values'][0]
+			self.Frame_HojaHis(codigo1,False)
+		else:
+			messagebox.showinfo("Alerta","Seleccione un ITEM!!")
+
+	def Exportar_data(self):
+		if self.TListaHojas.selection():
+			codigo=self.TListaHojas.item(self.TListaHojas.selection()[0])['values'][0]			
+			obj_report=reporte.Reporte()
+			aux=obj_report.Genera_RDatos(codigo)
+			if aux:
+				messagebox.showinfo("Alerta","Se generó correctamente!!")
+			else:
+				messagebox.showinfo("Alerta","Hoja Vacía, no pudo generarse!!")
+		else:
+			messagebox.showinfo("Alerta","Seleccione un ITEM!!")
 
 	def Frame_NewHIS(self):
 		self.frame_HIS=Frame(self.Ventana_Main,width=int(self.width*0.99),height=int(self.height*0.99))
@@ -142,9 +215,11 @@ class Ventana(object):
 		self.llenar_table()
 
 
-		Btn_verHoja=ttk.Button(self.frame_HIS,text='Ver Hoja',cursor="hand2")
-		Btn_verHoja["command"]=self.Frame_HojaHis
+		Btn_verHoja=ttk.Button(self.frame_HIS,text='Ver Hoja',cursor="hand2")	
+		Btn_verHoja["command"]=self.see_HojaData
 		Btn_verHoja.grid(row=8,column=2)
+
+
 
 		Btn_Insertar=ttk.Button(self.frame_HIS,text='Insertar Datos',cursor="hand2")
 		Btn_Insertar["command"]=self.Insert_Data
@@ -153,49 +228,74 @@ class Ventana(object):
 		Btn_Eliminar=ttk.Button(self.frame_HIS,text='Eliminar',cursor="hand2")
 		Btn_Eliminar.grid(row=8,column=6)
 
-	def Frame_HojaHis(self):
-		font=('Comic Sans MS',18,'bold')
+
+	def see_HojaData(self):
 		if self.table_Hojas.selection():
 			codigo1=self.table_Hojas.item(self.table_Hojas.selection()[0])['values'][0]
-			self.frame_HOJAHIS=Frame(self.Ventana_Main,width=int(self.width*0.99),height=int(self.height*0.99))
-			self.frame_HOJAHIS.grid_propagate(False)
-			self.frame_HOJAHIS.place(x=0,y=0)
-
-			etiqueta=Label(self.frame_HOJAHIS,text="PACIENTES REGISTRADOS EN LA HOJA",font=font)
-			etiqueta.grid(row=5,column=0,columnspan=6,sticky='e')
-			self.t_Hojas=ttk.Treeview(self.frame_HOJAHIS,height=5,columns=('#1','#2','#3','#4'),show='headings')
-			self.t_Hojas.heading("#1",text="Codigo")
-			self.t_Hojas.column("#1",width=100,anchor="w",stretch='NO')	
-			self.t_Hojas.heading("#2",text="Documento")
-			self.t_Hojas.column("#2",width=300,anchor="w",stretch='NO')
-			self.t_Hojas.heading("#3",text="Nombres")
-			self.t_Hojas.column("#3",width=200,anchor="w",stretch='NO')			
-			self.t_Hojas.heading("#4",text="Fecha")
-			self.t_Hojas.column("#4",width=250,anchor="w",stretch='NO')					
-			self.t_Hojas.grid(row=6,column=0,columnspan=20) 
-			self.t_Hojas.configure(height=30)
-
-			#llenar table...
-			for item in self.t_Hojas.get_children():
-				self.t_Hojas.delete(item)
-
-			ro_ws=self.obj_consult.datos_Hoja(codigo1)
-			for valores in ro_ws:
-				self.t_Hojas.insert("","end",values=(valores.ID_DETA,valores.DNI_PAC,valores.NOMBRE+" "+valores.APELLIDOS,valores.FECHA))
-
-
-			btn_Imprimir=ttk.Button(self.frame_HOJAHIS,text="Imprimir",cursor="hand2")
-			btn_Imprimir.grid(row=8,column=2)
-
-			btn_Editar=ttk.Button(self.frame_HOJAHIS,text="Editar",cursor="hand2")
-			btn_Editar.grid(row=8,column=4)
-			
-			btn_Eliminar=ttk.Button(self.frame_HOJAHIS,text="Eliminar",cursor="hand2")
-			btn_Eliminar["command"]=lambda:self.delete_dataHIS(codigo1)
-			btn_Eliminar.grid(row=8,column=6)
-			
+			self.Frame_HojaHis(codigo1,True)
 		else:
 			messagebox.showinfo("Alerta","Seleccione un ITEM!!")
+
+	def Frame_HojaHis(self,codigo1,identificador):
+		font=('Comic Sans MS',18,'bold')		
+		self.frame_HOJAHIS=Frame(self.Ventana_Main,width=int(self.width*0.99),height=int(self.height*0.99))
+		self.frame_HOJAHIS.grid_propagate(False)
+		self.frame_HOJAHIS.place(x=0,y=0)
+		etiqueta=Label(self.frame_HOJAHIS,text="PACIENTES REGISTRADOS EN LA HOJA",font=font)
+		etiqueta.grid(row=5,column=0,columnspan=6,sticky='e')
+		self.t_Hojas=ttk.Treeview(self.frame_HOJAHIS,height=5,columns=('#1','#2','#3','#4'),show='headings')
+		self.t_Hojas.heading("#1",text="Codigo")
+		self.t_Hojas.column("#1",width=100,anchor="w",stretch='NO')	
+		self.t_Hojas.heading("#2",text="Documento")
+		self.t_Hojas.column("#2",width=300,anchor="w",stretch='NO')
+		self.t_Hojas.heading("#3",text="Nombres")
+		self.t_Hojas.column("#3",width=200,anchor="w",stretch='NO')			
+		self.t_Hojas.heading("#4",text="Fecha")
+		self.t_Hojas.column("#4",width=250,anchor="w",stretch='NO')					
+		self.t_Hojas.grid(row=6,column=0,columnspan=20) 
+		self.t_Hojas.configure(height=30)
+
+			#llenar table...
+		for item in self.t_Hojas.get_children():
+			self.t_Hojas.delete(item)
+
+		ro_ws=self.obj_consult.datos_Hoja(codigo1)
+		for valores in ro_ws:
+			self.t_Hojas.insert("","end",values=(valores.ID_DETA,valores.DNI_PAC,valores.NOMBRE+" "+valores.APELLIDOS,valores.FECHA))
+
+
+		btn_Exportar=ttk.Button(self.frame_HOJAHIS,text="Exportar",cursor="hand2")
+		btn_Exportar["command"]=lambda:self.ReportData(codigo1)
+		btn_Exportar.grid(row=8,column=2)
+
+		if identificador:
+			btn_Editar=ttk.Button(self.frame_HOJAHIS,text="Editar",cursor="hand2")
+			btn_Editar["command"]=self.event_Editar
+			btn_Editar.grid(row=8,column=4)
+				
+			btn_Eliminar=ttk.Button(self.frame_HOJAHIS,text="Eliminar",cursor="hand2")
+			btn_Eliminar["command"]=lambda:self.delete_dataHIS(codigo1)
+			btn_Eliminar.grid(row=8,column=6)		
+
+	def event_Editar(self):
+		if self.t_Hojas.selection():
+			codigo1=self.t_Hojas.item(self.t_Hojas.selection()[0])['values'][0]			
+			self.obj_his.Top_EditarData(codigo1,self.Ventana_Main)
+
+		else:
+			messagebox.showinfo("Alerta","Seleccione un ITEM!!")
+
+	def ReportData(self,codigo):
+		obj_report=reporte.Reporte()
+		try:
+			aux=obj_report.Genera_RDatos(codigo)
+			if aux:
+				messagebox.showinfo("Alerta","Se generó el archivo correctamente")
+			else:
+				messagebox.showinfo("Alerta","No pudo generarse")
+		except Exception as e:
+			messagebox.showinfo("Alerta",f"No pudo generarse el Archivo {e}")
+		
 	def delete_dataHIS(self,codigo1):
 		iddeta=self.t_Hojas.item(self.t_Hojas.selection()[0])['values'][0]
 		nro_diagnostico=0		
@@ -260,7 +360,24 @@ class Ventana(object):
 		rows=self.obj_his.Hojas_HIS(self.dni_,self.servicio_)
 		for valores in rows:
 			self.table_Hojas.insert("","end",values=(valores.CODCABECERA,valores.NOMBRES+" "+ valores.APELLIDOP+" "+valores.APELLIDOM,valores.ESTABLECIMIENTO,valores.TURNO,valores.NOMBRE,valores.FECHA))
+	
+	def llenarcomboServicio(self):
+		rows=self.obj_consult.Servicios()
+		valores=[]
+		for val in rows:
+			valores.append(val.CODSERVICIO+"_"+val.NOMBRE)
+		self.combo_ServicioL["values"]=valores
+
+	def event_ComboServicio(self,event):
+		fecha_=self.dateL.get()
+		servicio=self.combo_ServicioL.get()
+		rows=self.obj_consult.ServiciosVar(servicio[:servicio.find("_")],fecha_)
 		
+		for item in self.TListaHojas.get_children():
+			self.TListaHojas.delete(item)
+		for val in rows:
+			self.TListaHojas.insert('','end',values=(val.CODCABECERA,val.NOMBRES+" "+val.APELLIDOP+" "+val.APELLIDOM,val.ESTABLECIMIENTO,val.TURNO,val.CODSERVICIO,val.FECHA))
+
 	def event_focus(self,event):
 		self.entry_Dni.delete(0,"end")
 		self.entry_Medico["state"]="normal"

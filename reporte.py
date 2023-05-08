@@ -10,12 +10,14 @@ class Reporte(object):
 		self.borde_caja=Border(top=double_border_side,right=double_border_side,bottom=double_border_side,left=double_border_side)
 		self.obj_consulta=Consulta_doc.Querys()
 	def Genera_RDatos(self,codigo):
-		rows=self.obj_consulta.datos_HojaV2(codigo)
+		aux=False
+		rows=self.obj_consulta.datos_HojaV2(codigo)		
 		if len(rows)>0:
 			self.Report_DigitD(rows)
+			aux=True
 		else:
-			messagebox.showinfo("Alerta","Error al generar!!")
-
+			aux=False
+		return aux
 	def Report_DigitD(self,rows):
 
 		wb=Workbook()
@@ -111,6 +113,7 @@ class Reporte(object):
 			sheet['B4']=datos.FECHA[5:7]
 			sheet['C4']=datos.ESTABLECIMIENTO
 			sheet['L4']=datos.DNI
+			sheet['G4']=datos.NOMBSERVICIO
 			sheet['N4']=datos.NOMBRES+" "+datos.APELLIDOP+" "+datos.APELLIDOM
 
 			sheet['A'+str(nro)]=datos.DNI_PAC
@@ -142,10 +145,6 @@ class Reporte(object):
 				sheet['Q'+str(nro+numeracion)]=dx.CODCIE
 				numeracion=numeracion+1
 
-			nro=nro+numeracion+1
-
-		
+			nro=nro+numeracion+1		
 		wb.save("ejemplo.xlsx")
 
-obj_report=Reporte()
-obj_report.Genera_RDatos('V8FR4')

@@ -410,8 +410,176 @@ class HIS(object):
 			diagnosticos.append(valores)
 		return diagnosticos
 
-	def Top_EditarData(self,codigo,id_deta):
-		pass
+	def Top_EditarData(self,codigo,ventana):
+		font1=('Comic Sans MS',12,'bold')
+		style=ttk.Style()
+		style.configure("MyEntry.TEntry",padding=6,foreground="#0000ff")
+		rows=self.obj_consultas.Query_HisDeta(codigo)
+		self.Top_Editar=Toplevel(ventana)
+		self.Top_Editar.geometry("750x600")
+		self.Top_Editar.title("Datos de Paciente")
+		self.Top_Editar.resizable(0,0)
+		self.Top_Editar.grab_set()
 
+		label=Label(self.Top_Editar,text="DATOS DEL PACIENTE A MODIFICAR",font=font1)	
+		label.grid(row=1,column=2,columnspan=3)
 		
+		label=Label(self.Top_Editar,text="DNI.........:",font=font1)	
+		label.grid(row=2,column=2)
+		label_dni=Label(self.Top_Editar,text=f"{rows[0].DNI_PAC}")
+		label_dni.grid(row=2,column=3,sticky=W)
+
+		label=Label(self.Top_Editar,text="HCL:",font=font1)	
+		label.grid(row=2,column=4)
+		label_nombre=Label(self.Top_Editar,text=f"{rows[0].HCL}")
+		label_nombre.grid(row=2,column=5,sticky=W)	
+
+		label=Label(self.Top_Editar,text="PACIENTE:",font=font1)	
+		label.grid(row=3,column=2)
+		label_nombre=Label(self.Top_Editar,text=f"{rows[0].NOMBRE} {rows[0].APELLIDOS}")
+		label_nombre.grid(row=3,column=3,sticky=W)
+
+		marco_perimetro=LabelFrame(self.Top_Editar,text="Datos",font=("Helvetica",11,"italic"),width=200)
+		marco_perimetro.grid(row=4,column=0,columnspan=7,padx=5)
+
+		label=Label(marco_perimetro,text="PC",font=font1)
+		label.grid(row=1,column=1)
+
+		Entry_PC=ttk.Entry(marco_perimetro,width=15,style="MyEntry.TEntry")
+		Entry_PC.insert(0,rows[0].PC)
+		Entry_PC.grid(row=1,column=2,pady=5)	
+
+		label=Label(marco_perimetro,text="Pab",font=font1)
+		label.grid(row=1,column=3)
+
+		Entry_Pab=ttk.Entry(marco_perimetro,width=15,style="MyEntry.TEntry")
+		Entry_Pab.insert(0,rows[0].PAB)
+		Entry_Pab.grid(row=1,column=4,pady=5)
+
+		label=Label(marco_perimetro,text="Peso",font=font1)
+		label.grid(row=2,column=1)
+
+		Entry_Peso=ttk.Entry(marco_perimetro,width=15,style="MyEntry.TEntry")
+		Entry_Peso.insert(0,rows[0].Peso)
+		Entry_Peso.grid(row=2,column=2,pady=5)	
+
+		label=Label(marco_perimetro,text="Talla",font=font1)
+		label.grid(row=2,column=3)
+
+		Entry_Talla=ttk.Entry(marco_perimetro,width=15,style="MyEntry.TEntry")
+		Entry_Talla.insert(0,rows[0].Talla)
+		Entry_Talla.grid(row=2,column=4,pady=5)
+
+		label=Label(marco_perimetro,text="HB",font=font1)
+		label.grid(row=2,column=5)
+
+		Entry_Hb=ttk.Entry(marco_perimetro,width=15,style="MyEntry.TEntry")
+		Entry_Hb.insert(0,rows[0].Hb)
+		Entry_Hb.grid(row=2,column=6,pady=5)
+
+
+		self.table_editar=ttk.Treeview(self.Top_Editar,height=5,columns=('#1','#2','#3','#4','#5'),show='headings')	
+
+		self.table_editar.heading("#1",text="ID")
+		self.table_editar.column("#1",width=50,anchor="w",stretch='NO')
+		self.table_editar.heading("#2",text="DESCRIPCION")
+		self.table_editar.column("#2",width=250,anchor="w",stretch='NO')	
+		self.table_editar.heading("#3",text="Tipo DX")
+		self.table_editar.column("#3",width=80,anchor="w",stretch='NO')
+		self.table_editar.heading("#4",text="LAB")
+		self.table_editar.column("#4",width=80,anchor="w",stretch='NO')
+		self.table_editar.heading("#5",text="CIE")
+		self.table_editar.column("#5",width=80,anchor="w",stretch='NO')				
+		self.table_editar.grid(row=7,column=0,columnspan=20)
+		self.table_editar.bind("<Double-Button-1>",self.top_EditarCie) 
+		self.table_editar.configure(height=5)
+		id_detalle=rows[0].ID_DETA
+		self.llenar_EditaDiagnostico(id_detalle)
+
+		btn_guardar=ttk.Button(self.Top_Editar,width=10,text="Grabar")
+		#error here
+		btn_guardar["command"]=lambda:self.Update_Deta(codigo,Entry_PC.get(),Entry_Pab.get(),Entry_Peso.get(),Entry_Talla.get(),Entry_Hb.get())
+		btn_guardar.grid(row=9,column=3,pady=5)
+	def Update_Deta(self,codigo,pc,pab,peso,talla,hb):
+
+		iden=self.table_editar.get_children()
+		dat=[]
+		for a in iden:
+			datos=self.table_editar.item(a)["values"]			
+			self.obj_consultas.Update_diagnostico(datos)
+
+		nro=self.obj_consultas.Update_DetalleHis(codigo,pc,pab,peso,talla,hb)
+		if nro>0:
+			messagebox.showinfo('Alerta','Successful!')
+			self.Top_Editar.destroy()
+
+	def top_EditarCie(self,event):
+		self.top_EditarC=Toplevel(self.Top_Editar)
+		self.top_EditarC.title("Buscar Diagnostico")
+		self.top_EditarC.geometry("700x100")
+		self.top_EditarC.resizable(0,0)
+		self.top_EditarC.grab_set()
+
+		itemTable=self.table_editar.selection()[0]
+		id_diagnostico=self.table_editar.item(self.table_editar.selection()[0])['values'][0]
+	
+
+		label=Label(self.top_EditarC,text="CIE")
+		label.grid(row=1,column=1)
+		self.cie_entryEditar=ttk.Entry(self.top_EditarC,width=15)
+		self.cie_entryEditar.bind("<Return>",self.fill_DXv2)
+		self.cie_entryEditar.grid(row=1,column=2)
+
+		label=Label(self.top_EditarC,text="Descripcion")
+		label.grid(row=1,column=3)
+		self.Descripcion_entryEditar=ttk.Entry(self.top_EditarC,width=30)
+		self.Descripcion_entryEditar.grid(row=1,column=4)
+
+		label=Label(self.top_EditarC,text="Tipo")
+		label.grid(row=1,column=5)
+		self.Tipo_entryEditar=ttk.Combobox(self.top_EditarC,width=15,values=["P","D","R"])
+		self.Tipo_entryEditar.current(0)
+		self.Tipo_entryEditar.grid(row=1,column=6)
+
+		label=Label(self.top_EditarC,text="Lab")
+		label.grid(row=1,column=7)
+		self.Lab_entryEditar=ttk.Entry(self.top_EditarC,width=15)
+		self.Lab_entryEditar.grid(row=1,column=8)
+
+		button_GrabarDX=ttk.Button(self.top_EditarC,text="Aceptar")
+		button_GrabarDX["command"]=lambda:self.insert_TablaEditar(itemTable,id_diagnostico)
+
+		button_GrabarDX.grid(row=2,column=4,pady=5)
+
+	def insert_TablaEditar(self,itemTable,id_diagnostico):
+		codigo_cie=self.cie_entryEditar.get()
+		descripcionDX=self.Descripcion_entryEditar.get()
+		tipoDx=self.Tipo_entryEditar.get()
+		lab=self.Lab_entryEditar.get()
+
+		self.table_editar.insert('','end',values=(id_diagnostico,descripcionDX,tipoDx,lab,codigo_cie))
+		self.top_EditarC.destroy()
+		self.Top_Editar.grab_set()
+		self.table_editar.delete(itemTable)
+		
+				
+	def fill_DXv2(self,event):
+		param=self.cie_entryEditar.get()
+		rows=self.obj_consultas.query_cie10Param(param)
+
+		try:
+			self.Descripcion_entryEditar.delete(0,'end')
+			self.Descripcion_entryEditar.insert(0,rows[0].NOMBRE)
+		except Exception as e:
+			messagebox.showerror("Alerta","Datos no Encontrados")			
+			self.top_EditarC.destroy()
+			self.Top_Editar.grab_set()		
+
+	def llenar_EditaDiagnostico(self,iddeta):
+		rows=self.obj_consultas.query_DIAGNOSTICOS(iddeta)
+		for data in rows:
+			self.table_editar.insert('','end',values=(data.Id_Diagnostico,data.Descripcion,data.TipDx,data.Lab,data.CODCIE))
+		
+
+			
 		
