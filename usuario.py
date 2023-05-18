@@ -12,7 +12,8 @@ class usuario(object):
 		user=""		
 		estado=""
 		servicio=""
-		dni=""	
+		dni=""
+		rol=""	
 		if len(rows)!=0:
 			identificador=1
 			for val in rows:
@@ -20,7 +21,8 @@ class usuario(object):
 				user=val.USUARIO				
 				servicio=val.CODSERVICIO
 				dni=val.DNI
+				rol=val.ROL
 		else:
 			identificador=-1
-		return identificador,user,estado,servicio,dni
+		return identificador,user,estado,servicio,dni,rol
 

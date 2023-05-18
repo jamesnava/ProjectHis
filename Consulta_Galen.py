@@ -16,3 +16,11 @@ class QuerysG(object):
 		self.cursor_galen.execute(sql)
 		rows=self.cursor_galen.fetchall()
 		return rows
+#:::::::::::::::::consulta especialistas::::::::::::::::
+	def Especialista(self,dni):
+		rows=[]
+		sql=f"""SELECT Nombres,ApellidoPaterno,ApellidoMaterno FROM Empleados WHERE DNI='{dni}'"""
+		self.cursor_galen.execute(sql)
+		rows=self.cursor_galen.fetchall()
+		return rows
+

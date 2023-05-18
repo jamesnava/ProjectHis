@@ -5,20 +5,22 @@ from ttkthemes import ThemedStyle
 from tkcalendar import Calendar,DateEntry
 import His
 import Consulta_doc
+import Consulta_Galen
 import reporte
 from tkinter import messagebox
 
 
 class Ventana(object):
 	
-	def __init__(self,usuario,servicio,dni):
+	def __init__(self,usuario,servicio,dni,rol):
 		self.usuario_=usuario
 		self.servicio_=servicio
 		self.dni_=dni
-
+		self.rol=rol
 
 		self.obj_his=His.HIS()
 		self.obj_consult=Consulta_doc.Querys()
+		self.obj_consultaGalen=Consulta_Galen.QuerysG()
 		self.codigo_servicio=None
 		#self.Ventana_Main=Tk()
 		
@@ -38,26 +40,358 @@ class Ventana(object):
 		self.M_Configuracion.add_command(label='Cerrar',command=self.Ventana_Main.destroy)
 		self.M_Configuracion.add_separator()		
 		self.Barra_Menu.add_cascade(label='Archivo',menu=self.M_Configuracion)
+
 		#creando menu configuracion
-		self.M_Usuario=Menu(self.Barra_Menu,tearoff=False)
-		self.M_Usuario.add_command(label='Agregar Especialistas')
-		self.M_Usuario.add_command(label='Listar Especialistas')		
-		self.M_Usuario.add_separator()		
-		self.Barra_Menu.add_cascade(label='Especialistas',menu=self.M_Usuario)
+		if self.rol=="ADMINISTRADOR":
+			self.M_Usuario=Menu(self.Barra_Menu,tearoff=False)		
+			self.M_Usuario.add_command(label='Especialistas',command=self.Frame_Especialistas)		
+			self.M_Usuario.add_separator()
+			self.M_Usuario.add_command(label='Usuarios',command=self.Frame_Usuarios)			
+			self.Barra_Menu.add_cascade(label='Configuraciones',menu=self.M_Usuario)
 
 		# creando menu Acciones
 		self.M_Acciones=Menu(self.Barra_Menu,tearoff=False)
 		self.M_Acciones.add_command(label='Insertar His',command=self.Frame_NewHIS)
-		self.M_Acciones.add_command(label='Ver Hojas',command=self.Frame_ListaHojasHis)			
+		if self.rol=="ADMINISTRADOR":
+			self.M_Acciones.add_command(label='Ver Hojas',command=self.Frame_ListaHojasHis)			
 		self.M_Acciones.add_separator()		
 		self.Barra_Menu.add_cascade(label='His Minsa',menu=self.M_Acciones)				
 		#Ayuda...
 		self.M_Ayuda=Menu(self.Barra_Menu,tearoff=False)
-		self.M_Ayuda.add_command(label='Acerca de...')
-		self.M_Ayuda.add_command(label='Desarrollado por...')		
+		self.M_Ayuda.add_command(label='Acerca de...',command=self.acercaDe_)
+		self.M_Ayuda.add_command(label='Desarrollado por...',command=self.Author_)		
 		self.M_Ayuda.add_separator()		
 		self.Barra_Menu.add_cascade(label='Ayuda',menu=self.M_Ayuda)		
 		self.Ventana_Main.mainloop()
+
+	def Frame_Usuarios(self):
+		self.Frame_Usuario=Frame(self.Ventana_Main,width=int(self.width*0.99),height=int(self.height*0.99))
+		self.Frame_Usuario.place(x=0,y=0)
+		self.Frame_Usuario.grid_propagate(False)
+		style=ttk.Style()
+		style.configure("MyEntry.TEntry",padding=6,foreground="#0000ff")
+
+		font=('Comic Sans MS',18,'bold')
+		label=Label(self.Frame_Usuario,text="DATOS DE LOS USUARIOS",font=font)
+		label.grid(row=0,column=0,columnspan=10,pady=5)
+
+		font1=('Comic Sans MS',12,'bold')
+		label=Label(self.Frame_Usuario,text="BUSCAR :",font=font1)
+		label.grid(row=1,column=0,pady=5)
+		self.Entry_Buscar=ttk.Entry(self.Frame_Usuario,style="MyEntry.TEntry")
+		self.Entry_Buscar.grid(row=1,column=1,pady=5)
+		self.Entry_Buscar.bind("<Return>",lambda event: self.search_MUsuario(event))
+		self.Entry_Buscar.bind("<Button-1>",self.delete_EntryUser)
+
+
+		label=Label(self.Frame_Usuario,text="DNI :",font=font1)
+		label.grid(row=1,column=2,pady=5)
+		self.Entry_DNIUsuario=ttk.Entry(self.Frame_Usuario,style="MyEntry.TEntry")
+		self.Entry_DNIUsuario.grid(row=1,column=3,pady=5)
+		self.Entry_DNIUsuario["state"]="readonly"
+
+		label=Label(self.Frame_Usuario,text="USUARIO :",font=font1)
+		label.grid(row=1,column=4,pady=5)
+		self.Entry_NickUsuario=ttk.Entry(self.Frame_Usuario,style="MyEntry.TEntry")
+		self.Entry_NickUsuario.grid(row=1,column=5,pady=5)
+
+		label=Label(self.Frame_Usuario,text="PASSWORD :",font=font1)
+		label.grid(row=2,column=2,pady=5)
+		self.Entry_ContraseniaUsuario=ttk.Entry(self.Frame_Usuario,style="MyEntry.TEntry")
+		self.Entry_ContraseniaUsuario.grid(row=2,column=3,pady=5)
+
+		label=Label(self.Frame_Usuario,text="ESTADO:",font=font1)
+		label.grid(row=2,column=4,pady=5)
+		self.Combo_EstadoUsuario=ttk.Combobox(self.Frame_Usuario,style="MyEntry.TEntry",values=['ACTIVO','INACTIVO'])
+		self.Combo_EstadoUsuario.current(0)
+		self.Combo_EstadoUsuario.grid(row=2,column=5,pady=5)
+
+		label=Label(self.Frame_Usuario,text="ROL:",font=font1)
+		label.grid(row=1,column=6,pady=5)
+		self.Combo_RolUsuario=ttk.Combobox(self.Frame_Usuario,style="MyEntry.TEntry",values=['ADMINISTRADOR','CLIENTE'])
+		self.Combo_RolUsuario.current(0)
+		self.Combo_RolUsuario.grid(row=1,column=7,pady=5)
+
+		bnt_addUser=ttk.Button(self.Frame_Usuario,text="Agregar Usuario")
+		bnt_addUser['command']=self.insert_User	
+		bnt_addUser.grid(row=3,column=4,pady=5)		
+
+		self.table_Usuarios=ttk.Treeview(self.Frame_Usuario,height=5,columns=('#1','#2','#3'),show='headings')		
+		self.table_Usuarios.heading("#1",text="DNI")
+		self.table_Usuarios.column("#1",width=100,anchor="w",stretch='NO')	
+		self.table_Usuarios.heading("#2",text="USUARIO")
+		self.table_Usuarios.column("#2",width=300,anchor="w",stretch='NO')
+		self.table_Usuarios.heading("#3",text="ESTADO")		
+		self.table_Usuarios.column("#3",width=300,anchor="w",stretch='NO')	
+		self.table_Usuarios.grid(row=6,column=0,columnspan=20,pady=5) 
+		self.table_Usuarios.configure(height=15)
+		self.fill_table()
+
+		btn_Cambiar=ttk.Button(self.Frame_Usuario,text="Estado")
+		btn_Cambiar.config(command=self.Update_UserState)
+		btn_Cambiar.grid(row=8,column=2)
+
+		btn_contrasenia=ttk.Button(self.Frame_Usuario,text="Cambiar Contraseña")
+		btn_contrasenia["command"]=self.Update_UserPassword
+		btn_contrasenia.grid(row=8,column=3)
+
+	def Update_UserPassword(self):
+		style=ttk.Style()
+		style.configure("MyEntry.TEntry",padding=6,foreground="#0000ff")
+		if self.table_Usuarios.selection():
+			dni=self.table_Usuarios.item(self.table_Usuarios.selection()[0])['values'][0]
+			self.Top_UsuarioPASS=Toplevel(self.Ventana_Main)
+			self.Top_UsuarioPASS.geometry("300x150")
+			self.Top_UsuarioPASS.title("Modificar el Estado")
+			self.Top_UsuarioPASS.resizable(0,0)
+			self.Top_UsuarioPASS.grab_set()				
+			etiqueta=Label(self.Top_UsuarioPASS,text="Contraseña: ")
+			etiqueta.grid(row=1,column=0)
+			self.Entry_UPassword=ttk.Entry(self.Top_UsuarioPASS,style="MyEntry.TEntry",show='*')
+			self.Entry_UPassword.grid(row=1,column=1)			
+			btn_UpdatePASS=ttk.Button(self.Top_UsuarioPASS,text="Aceptar")
+			btn_UpdatePASS['command']=self.Update_Password		
+			btn_UpdatePASS.grid(row=2,column=0,columnspan=2)
+		else:
+			messagebox.showerror("Notificación","Seleccione un ITEM!!")
+
+	def Update_Password(self):
+		dni=self.table_Usuarios.item(self.table_Usuarios.selection()[0])['values'][0]
+		password=self.Entry_UPassword.get()
+		self.obj_consult.Update_UserPassword(dni,password)
+		self.Top_UsuarioPASS.destroy()
+
+	def Update_UserState(self):
+		if self.table_Usuarios.selection():
+			dni=self.table_Usuarios.item(self.table_Usuarios.selection()[0])['values'][0]
+			self.Top_Usuario=Toplevel(self.Ventana_Main)
+			self.Top_Usuario.geometry("300x150")
+			self.Top_Usuario.title("Modificar el Estado")
+			self.Top_Usuario.resizable(0,0)
+			self.Top_Usuario.grab_set()				
+			etiqueta=Label(self.Top_Usuario,text="Estado: ")
+			etiqueta.grid(row=1,column=0)
+			self.combo_UpdateUsuario=ttk.Combobox(self.Top_Usuario,values=['ACTIVO','INACTIVO'])
+			self.combo_UpdateUsuario.grid(row=1,column=1)			
+			self.combo_UpdateUsuario.current(0)
+			btn_UpdateUsuario=ttk.Button(self.Top_Usuario,text="Aceptar")
+			btn_UpdateUsuario['command']=self.Update_State		
+			btn_UpdateUsuario.grid(row=2,column=0,columnspan=2)
+		else:
+			messagebox.showerror("Notificación","Seleccione un ITEM!!")
+	
+	def Update_State(self):
+		dni=self.table_Usuarios.item(self.table_Usuarios.selection()[0])['values'][0]
+		estado=self.combo_UpdateUsuario.get()
+		self.obj_consult.Update_User(dni,estado)
+		self.Top_Usuario.destroy()
+
+	def fill_table(self):
+		rows=self.obj_consult.query_usuarios()
+		for val in rows:
+			self.table_Usuarios.insert("",'end',values=(val.DNI,val.USUARIO,val.ESTADO))		
+
+	def insert_User(self):
+		self.Entry_DNIUsuario.config(state="normal")
+		dni=self.Entry_DNIUsuario.get()
+		user=self.Entry_NickUsuario.get()
+		passw=self.Entry_ContraseniaUsuario.get()
+		estado_user=self.Combo_EstadoUsuario.get()
+		rol=self.Combo_RolUsuario.get()
+
+		rows_user=self.obj_consult.search_User(user)
+		if not len(rows_user)>0:
+			rows_userDni=self.obj_consult.search_UserDni(dni)
+			if not len(rows_userDni)>0:
+				self.obj_consult.insert_User(dni,user,passw,estado_user,rol)				
+			else:
+				messagebox.showerror("Alerta",f"{dni} ya tiene asignado un usuario")
+		else:
+			messagebox.showerror("Alerta","Elija otro Usuario, ya existe!!")
+
+
+	def search_MUsuario(self,event):
+		dni=self.Entry_Buscar.get()
+		rows=self.obj_consult.query_Medico(dni)
+
+		if len(rows)>0:
+			self.Entry_DNIUsuario.config(state="normal")
+			self.Entry_DNIUsuario.insert(0,rows[0].DNI)
+			self.Entry_DNIUsuario.config(state="readonly")
+		else:
+			messagebox.showerror("Alerta","Datos no encontrados")
+
+	def delete_EntryUser(self,event):
+
+		self.Entry_Buscar.delete(0,"end")
+		self.Entry_DNIUsuario.config(state="normal")
+		self.Entry_DNIUsuario.delete(0,"end")
+		self.Entry_DNIUsuario["state"]="readonly"
+		self.Entry_NickUsuario.delete(0,"end")
+		self.Entry_ContraseniaUsuario.delete(0,"end")
+
+	def Frame_Especialistas(self):
+		self.frame_Especialista=Frame(self.Ventana_Main,width=int(self.width*0.99),height=int(self.height*0.99))
+		self.frame_Especialista.place(x=0,y=0)
+		self.frame_Especialista.grid_propagate(False)
+		style=ttk.Style()
+		style.configure("MyEntry.TEntry",padding=6,foreground="#0000ff")
+
+		font=('Comic Sans MS',18,'bold')
+		label=Label(self.frame_Especialista,text="DATOS DEL ESPECIALISTA",font=font)
+		label.grid(row=0,column=0,columnspan=10,pady=5)
+
+		font1=('Comic Sans MS',12,'bold')
+		label=Label(self.frame_Especialista,text="DNI :",font=font1)
+		label.grid(row=1,column=0,pady=5)
+		self.Entry_DNIEspecialista=ttk.Entry(self.frame_Especialista,style="MyEntry.TEntry")
+		self.Entry_DNIEspecialista.grid(row=1,column=1,pady=5)
+		self.Entry_DNIEspecialista.bind("<Return>",lambda event: self.filldata_Especialista(event))
+		self.Entry_DNIEspecialista.bind("<Button-1>",self.delete_EntryEsp)
+
+		label=Label(self.frame_Especialista,text="NOMBRES :",font=font1)
+		label.grid(row=1,column=2,pady=5)
+		self.Entry_NOMBREEspecialista=ttk.Entry(self.frame_Especialista,style="MyEntry.TEntry")
+		self.Entry_NOMBREEspecialista.grid(row=1,column=3,pady=5)
+
+		label=Label(self.frame_Especialista,text="APELLIDO PATERNO :",font=font1)
+		label.grid(row=2,column=0,pady=5)
+		self.Entry_APEELIDOPEspecialista=ttk.Entry(self.frame_Especialista,style="MyEntry.TEntry")
+		self.Entry_APEELIDOPEspecialista.grid(row=2,column=1,pady=5)
+
+		label=Label(self.frame_Especialista,text="APELLIDO MATERNO :",font=font1)
+		label.grid(row=2,column=2,pady=5)
+		self.Entry_APEELIDOMEspecialista=ttk.Entry(self.frame_Especialista,style="MyEntry.TEntry")
+		self.Entry_APEELIDOMEspecialista.grid(row=2,column=3,pady=5)
+
+		label=Label(self.frame_Especialista,text="TELEFONO:",font=font1)
+		label.grid(row=1,column=4,pady=5)
+		self.Entry_TELEFONOEspecialista=ttk.Entry(self.frame_Especialista,style="MyEntry.TEntry")
+		self.Entry_TELEFONOEspecialista.grid(row=1,column=5,pady=5)
+
+		label=Label(self.frame_Especialista,text="CORREO :",font=font1)
+		label.grid(row=2,column=4,pady=5)
+		self.Entry_CORREOEspecialista=ttk.Entry(self.frame_Especialista,style="MyEntry.TEntry")
+		self.Entry_CORREOEspecialista.grid(row=2,column=5,pady=5)
+
+		label=Label(self.frame_Especialista,text="ESPECIALIDAD :",font=font1)
+		label.grid(row=3,column=0,pady=5)
+		self.Combo_Especialidad=ttk.Combobox(self.frame_Especialista,width=25)
+		self.Combo_Especialidad.grid(row=3,column=1,pady=5)
+		self.filldata_Especialidad()
+		self.Combo_Especialidad.current(0)
+		btn_insertaEspecialista=ttk.Button(self.frame_Especialista,text="Insertar")	
+		btn_insertaEspecialista["command"]=self.insert_Medico
+		btn_insertaEspecialista.grid(row=4,column=2,pady=5)
+		
+
+
+		self.table_Especialista=ttk.Treeview(self.frame_Especialista,height=5,columns=('#1','#2','#3','#4'),show='headings')		
+		self.table_Especialista.heading("#1",text="DNI")
+		self.table_Especialista.column("#1",width=100,anchor="w",stretch='NO')	
+		self.table_Especialista.heading("#2",text="NOMBRE")
+		self.table_Especialista.column("#2",width=300,anchor="w",stretch='NO')
+		self.table_Especialista.heading("#3",text="APELLIDO PATERNO")
+		self.table_Especialista.column("#3",width=200,anchor="w",stretch='NO')
+		self.table_Especialista.heading("#4",text="APELLIDO MATERNO")
+		self.table_Especialista.column("#4",width=200,anchor="w",stretch='NO')
+		self.table_Especialista.heading("#4",text="SERVICIO")
+		self.table_Especialista.column("#4",width=200,anchor="w",stretch='NO')					
+		self.table_Especialista.grid(row=6,column=0,columnspan=20,pady=5) 
+		self.table_Especialista.configure(height=15)
+		self.Llenar_TablaMedico()
+		btn_ExportarData=ttk.Button(self.frame_Especialista,text="Editar")
+		btn_ExportarData["command"]=self.Update_Especialista
+		btn_ExportarData.grid(row=8,column=2)	
+
+
+
+	def Update_Especialista(self):
+		if self.table_Especialista.selection():
+			dni=self.table_Especialista.item(self.table_Especialista.selection()[0])['values'][0]
+			self.Top_Especialista=Toplevel(self.Ventana_Main)
+			self.Top_Especialista.geometry("500x100")
+			self.Top_Especialista.title("Modificar al medico")
+			self.Top_Especialista.resizable(0,0)		
+			etiqueta=Label(self.Top_Especialista,text="DNI: ")
+			etiqueta.grid(row=1,column=0)
+			self.entry_DniUpdate=ttk.Entry(self.Top_Especialista)
+			self.entry_DniUpdate.insert(0,dni)
+			self.entry_DniUpdate.grid(row=1,column=1)
+			etiqueta=Label(self.Top_Especialista,text="Servicio: ")
+			etiqueta.grid(row=1,column=2)
+			self.combo_UpdateServicio=ttk.Combobox(self.Top_Especialista)
+			self.combo_UpdateServicio.grid(row=1,column=3)
+			self.LlenarComboEspecialista()
+			self.combo_UpdateServicio.current(0)
+			btn_UpdateServicio=ttk.Button(self.Top_Especialista,text="Aceptar")
+			btn_UpdateServicio.config(command=self.Cambiar_Servicio)
+			btn_UpdateServicio.grid(row=2,column=2)
+		else:
+			messagebox.showerror("Notificación","Seleccione un ITEM!!")
+
+	def Cambiar_Servicio(self):
+		dni=self.entry_DniUpdate.get()
+		servicio=self.combo_UpdateServicio.get()[:self.combo_UpdateServicio.get().find("_")]
+		self.obj_consult.Update_Especialista(dni,servicio)
+		self.Top_Especialista.destroy()
+	def LlenarComboEspecialista(self):
+		rows=self.obj_consult.Servicios()
+		valores=[]
+		for val in rows:
+			valores.append(val.CODSERVICIO+"_"+val.NOMBRE)
+		self.combo_UpdateServicio["values"]=valores
+
+	def Llenar_TablaMedico(self):		
+		rows=self.obj_consult.query_Especialista()
+		for val in rows:
+			self.table_Especialista.insert("",'end',values=(val.DNI,val.NOMBRES,val.APELLIDOP+" "+val.APELLIDOM,val.NOMBRE))		
+
+	def insert_Medico(self):			
+		dni_Especialista=self.Entry_DNIEspecialista.get()
+		nombre_Especialista=self.Entry_NOMBREEspecialista.get()
+		apellidop_Especialista=self.Entry_APEELIDOPEspecialista.get()
+		apellidom_Especialista=self.Entry_APEELIDOPEspecialista.get()
+		telefono_Especialista=self.Entry_TELEFONOEspecialista.get()
+		correo_Especialista=self.Entry_CORREOEspecialista.get()
+		especialidad_Especialista=self.Combo_Especialidad.get()[:self.Combo_Especialidad.get().find("_")]
+		if len(dni_Especialista)>0 and len(correo_Especialista)>0:
+			self.obj_consult.insert_Especialista(dni_Especialista,nombre_Especialista,apellidop_Especialista,apellidom_Especialista,telefono_Especialista,correo_Especialista,especialidad_Especialista)
+		else:
+			messagebox.showinfo("Alerta","Rellene los campos")
+
+		for item in self.table_Especialista.get_children():
+			self.table_Especialista.delete(item)
+		self.Llenar_TablaMedico()
+
+	def filldata_Especialista(self,event):
+		dni=self.Entry_DNIEspecialista.get()
+		rows=self.obj_consultaGalen.Especialista(dni)		
+		self.delete_EntryEspecialista()
+		for val in rows:
+			self.Entry_NOMBREEspecialista.insert(0,val.Nombres)
+			self.Entry_APEELIDOPEspecialista.insert(0,val.ApellidoPaterno)
+			self.Entry_APEELIDOMEspecialista.insert(0,val.ApellidoMaterno)
+	def filldata_Especialidad(self):
+		rows=self.obj_consult.Servicios()
+		data=[]
+		for val in rows:
+			data.append(val.CODSERVICIO+"_"+val.NOMBRE)
+		self.Combo_Especialidad["values"]=data
+
+	def delete_EntryEsp(self,event):
+		self.Entry_NOMBREEspecialista.delete(0,"end")
+		self.Entry_APEELIDOPEspecialista.delete(0,"end")
+		self.Entry_APEELIDOMEspecialista.delete(0,"end")
+		self.Entry_TELEFONOEspecialista.delete(0,"end")
+		self.Entry_CORREOEspecialista.delete(0,"end")
+
+	def delete_EntryEspecialista(self):
+		self.Entry_NOMBREEspecialista.delete(0,"end")
+		self.Entry_APEELIDOPEspecialista.delete(0,"end")
+		self.Entry_APEELIDOMEspecialista.delete(0,"end")
+		self.Entry_TELEFONOEspecialista.delete(0,"end")
+		self.Entry_CORREOEspecialista.delete(0,"end")
 
 	def Frame_ListaHojasHis(self):
 		self.frame_HojasHIS=Frame(self.Ventana_Main,width=int(self.width*0.99),height=int(self.height*0.99))
@@ -332,7 +666,8 @@ class Ventana(object):
 		datos.append(fecha)
 		datos.append(Establecimiento)
 		datos.append(turno)
-		datos.append(self.dni_medico)		
+		datos.append(self.dni_medico)
+		datos.append(self.servicio_)		
 		nro=self.obj_his.insertar_HISCAB(datos,self.dni_,self.servicio_)
 		self.llenar_table()
 		if nro==1:
@@ -391,6 +726,11 @@ class Ventana(object):
 		self.entry_Medico.delete(0,"end")
 		self.entry_Servicio["state"]="normal"
 		self.entry_Servicio.delete(0,"end")
+
+	def acercaDe_(self):
+		messagebox.showinfo("Acerca de...","Registro Diario de Hojas de Atencion HIS V1")
+	def Author_(self):
+		messagebox.showinfo("Acerca de...","Desarrollado por la Unidad de Estadistica e Informatica del HSRA mediante el área de 'Desarrollo Informático'\n by Jaime Navarro Cruz @todos los derechos reservados ")
 	
 	
 

@@ -28,7 +28,7 @@ class Querys(object):
 		return rows
 
 	def insert_HISCABE(self,datos):
-		sql=f"""INSERT INTO HIS_CAB VALUES('{datos[0]}','{datos[1]}','{datos[2]}','{datos[3]}','{datos[4]}')"""
+		sql=f"""INSERT INTO HIS_CAB VALUES('{datos[0]}','{datos[1]}','{datos[2]}','{datos[3]}','{datos[4]}','{datos[5]}')"""
 		self.cursor.execute(sql)
 		self.cursor.commit()
 		return self.cursor.rowcount
@@ -213,16 +213,88 @@ class Querys(object):
 	def ServiciosVar(self,servicio,fecha):
 		try:
 			rows=[]
-			sql=f"""SELECT * FROM HIS_CAB AS HC INNER JOIN MEDICO AS M ON HC.DNI=M.DNI AND HC.FECHA='{fecha}' AND CODSERVICIO='{servicio}'"""
+			#sql=f"""SELECT * FROM HIS_CAB AS HC INNER JOIN MEDICO AS M ON HC.DNI=M.DNI AND HC.FECHA='{fecha}' AND CODSERVICIO='{servicio}'"""
+			sql=f"""SELECT * FROM HIS_CAB AS HC INNER JOIN MEDICO AS M ON HC.DNI=M.DNI AND HC.FECHA='{fecha}' AND HC.COD_SERVICIO='{servicio}'"""
 			self.cursor.execute(sql)
 			rows=self.cursor.fetchall()
 			return rows
 		except Exception as e:
 			messagebox.showerror("Alerta",f"{e}")
 
-		
+##############especialista###############
+	def insert_Especialista(self,dni,nombres,apellidosP,apellidosM,telefono,correo,codigo):
+		try:
+			sql=f"""INSERT INTO MEDICO VALUES('{dni}','{nombres}','{apellidosP}','{apellidosM}','{telefono}','{correo}','{codigo}')"""
+			self.cursor.execute(sql)		
+			self.cursor.commit()
+			messagebox.showinfo("Notificación","Success!!")
+		except Exception as e:
+			messagebox.showerror("Error",e)
+			
+	def query_Especialista(self):
+		try:
+			rows=[]
+			sql=f"""SELECT * FROM MEDICO AS M INNER JOIN SERVICIO AS S ON M.CODSERVICIO=S.CODSERVICIO"""
+			self.cursor.execute(sql)
+			rows=self.cursor.fetchall()
+			return rows
+		except Exception as e:
+			messagebox.showerror("Alerta",f"{e}")
+	def Update_Especialista(self,dni,servicio):
+		try:
+			sql=f"""UPDATE MEDICO SET CODSERVICIO='{servicio}' WHERE DNI='{dni}'"""
+			self.cursor.execute(sql)
+			self.cursor.commit()
+			messagebox.showinfo("Notificación","Se Modifico correctamente")
+		except Exception as e:
+			messagebox.showerror("Alerta",f"error {e}")
 
+####################Usuarios################
+	def query_usuarios(self):
+		rows=[]
+		sql=f"""SELECT * FROM USUARIO"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows	
+
+	def search_User(self,user):
+		rows=[]
+		sql=f"""SELECT * FROM USUARIO WHERE USUARIO='{user}'"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows	
+	def search_UserDni(self,dni):
+		rows=[]
+		sql=f"""SELECT * FROM USUARIO WHERE DNI='{dni}'"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows	
 	
+	def insert_User(self,DNI,USUARIO,CONTRASENIA,ESTADO,ROL):
+		try:
+			sql=f"""INSERT INTO USUARIO VALUES('{DNI}','{USUARIO}','{CONTRASENIA}','{ESTADO}','{ROL}')"""
+			self.cursor.execute(sql)
+			self.cursor.commit()
+			messagebox.showinfo("Alerta","Success!")
+		except Exception as e:
+			messagebox.showerror("Alerta",f"error al insertar {e}")
+	
+	def Update_User(self,dni,state):
+		try:
+			sql=f"""UPDATE USUARIO SET ESTADO='{state}' WHERE DNI='{dni}'"""
+			self.cursor.execute(sql)
+			self.cursor.commit()
+			messagebox.showinfo("Alerta","Success!")
+		except Exception as e:
+			messagebox.showerror("Alerta",f"error al inserta {e}")
 
-
+	def Update_UserPassword(self,dni,password):
+		try:
+			sql=f"""UPDATE USUARIO SET CONTRASENIA='{password}' WHERE DNI='{dni}'"""
+			self.cursor.execute(sql)
+			self.cursor.commit()
+			messagebox.showinfo("Alerta","Success!")
+		except Exception as e:
+			messagebox.showerror("Alerta",f"error al inserta {e}")
+	
 

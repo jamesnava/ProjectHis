@@ -68,7 +68,7 @@ class Login():
 		try:
 			u=self.Entry_User.get()
 			c=self.Entry_Contra.get()			
-			identificador,usuario,estado,servicio,dni=self.obj_usuario.conectar(u,c)
+			identificador,usuario,estado,servicio,dni,rol=self.obj_usuario.conectar(u,c)
 			
 			if identificador==-1:
 				messagebox.showerror('Alerta','Datos Incorrectos o el usuario no Existe')
@@ -85,7 +85,7 @@ class Login():
 						break
 				#self.root.withdraw()
 				self.root.destroy()
-				V_Main.Ventana(usuario,servicio,dni)
+				V_Main.Ventana(usuario,servicio,dni,rol)
 
 			elif estado=="INACTIVO":
 				messagebox.showerror('Alerta','Usuario Inactivo')
