@@ -1,2 +1,6 @@
 bd hisminsa.txt
 virtual
+dist
+build
+config_galen.ini
+config_sisdoc.ini

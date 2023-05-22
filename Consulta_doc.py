@@ -213,8 +213,8 @@ class Querys(object):
 	def ServiciosVar(self,servicio,fecha):
 		try:
 			rows=[]
-			#sql=f"""SELECT * FROM HIS_CAB AS HC INNER JOIN MEDICO AS M ON HC.DNI=M.DNI AND HC.FECHA='{fecha}' AND CODSERVICIO='{servicio}'"""
-			sql=f"""SELECT * FROM HIS_CAB AS HC INNER JOIN MEDICO AS M ON HC.DNI=M.DNI AND HC.FECHA='{fecha}' AND HC.COD_SERVICIO='{servicio}'"""
+			sql=f"""SELECT * FROM HIS_CAB AS HC INNER JOIN MEDICO AS M ON HC.DNI=M.DNI INNER JOIN SERVICIO AS S ON S.CODSERVICIO=HC.COD_SERVICIO AND HC.FECHA='{fecha}' AND HC.COD_SERVICIO='{servicio}'"""
+			#sql=f"""SELECT * FROM HIS_CAB AS HC INNER JOIN MEDICO AS M ON HC.DNI=M.DNI AND HC.FECHA='{fecha}' AND HC.COD_SERVICIO='{servicio}'"""
 			self.cursor.execute(sql)
 			rows=self.cursor.fetchall()
 			return rows
@@ -296,5 +296,33 @@ class Querys(object):
 			messagebox.showinfo("Alerta","Success!")
 		except Exception as e:
 			messagebox.showerror("Alerta",f"error al inserta {e}")
-	
+	def insert_Especialidad(self,codigo,especialidad):
+
+		try:
+			sql=f"INSERT INTO SERVICIO VALUES('{codigo}','{especialidad}')"
+			self.cursor.execute(sql)
+			self.cursor.commit()
+			messagebox.showinfo("Alerta","Success!")
+		except Exception as e:
+			messagebox.showerror("Alerta",f"error al inserta {e}")
+
+	def Query_Especialidad(self):
+		rows=[]
+		sql=f"""SELECT * FROM SERVICIO ORDER BY NOMBRE ASC"""
+		self.cursor.execute(sql)
+		rows=self.cursor.fetchall()
+		return rows
+	def Update_Password(self,usuario,dni,A,N):
+		try:
+			sql=f"""UPDATE USUARIO SET CONTRASENIA='{N}' WHERE DNI='{dni}' AND USUARIO='{usuario}' AND CONTRASENIA='{A}'"""
+			self.cursor.execute(sql)
+			self.cursor.commit()
+			nro=self.cursor.rowcount
+			return nro
+
+		except Exception as e:
+			messagebox.showerror("Alerta",f"error al insertar {e}")
+
+
+
 

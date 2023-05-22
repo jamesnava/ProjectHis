@@ -8,6 +8,8 @@ import Consulta_doc
 import Consulta_Galen
 import reporte
 from tkinter import messagebox
+from tkinter import filedialog
+from datetime import datetime
 
 
 class Ventana(object):
@@ -26,6 +28,7 @@ class Ventana(object):
 		
 		self.Ventana_Main=ThemedTk(theme='radiance')
 		self.Ventana_Main.title("Ventana Principal")
+		self.Ventana_Main.iconbitmap("image/medical.ico")
 		self.height=int(self.Ventana_Main.winfo_screenheight()*0.90)
 		self.width=int(self.Ventana_Main.winfo_screenwidth()*0.80)
 		self.Ventana_Main.geometry("%dx%d" % (self.width,self.height)+"+0+0")
@@ -35,7 +38,7 @@ class Ventana(object):
 		self.Ventana_Main['menu']=self.Barra_Menu
 
 		self.M_Configuracion=Menu(self.Barra_Menu,tearoff=False)
-		self.M_Configuracion.add_command(label='Restablecer Contraseña')
+		self.M_Configuracion.add_command(label='Cambiar Contraseña',command=self.change_password)
 		self.M_Configuracion.add_command(label='Minimizar',command=self.Ventana_Main.iconify)
 		self.M_Configuracion.add_command(label='Cerrar',command=self.Ventana_Main.destroy)
 		self.M_Configuracion.add_separator()		
@@ -46,7 +49,9 @@ class Ventana(object):
 			self.M_Usuario=Menu(self.Barra_Menu,tearoff=False)		
 			self.M_Usuario.add_command(label='Especialistas',command=self.Frame_Especialistas)		
 			self.M_Usuario.add_separator()
-			self.M_Usuario.add_command(label='Usuarios',command=self.Frame_Usuarios)			
+			self.M_Usuario.add_command(label='Usuarios',command=self.Frame_Usuarios)
+			self.M_Usuario.add_separator()
+			self.M_Usuario.add_command(label='Especialidad',command=self.Frame_EspecialidadV)	
 			self.Barra_Menu.add_cascade(label='Configuraciones',menu=self.M_Usuario)
 
 		# creando menu Acciones
@@ -63,6 +68,100 @@ class Ventana(object):
 		self.M_Ayuda.add_separator()		
 		self.Barra_Menu.add_cascade(label='Ayuda',menu=self.M_Ayuda)		
 		self.Ventana_Main.mainloop()
+
+	def change_password(self):
+		self.top_Password=Toplevel(self.Ventana_Main)
+		self.top_Password.geometry("330x120")
+		self.top_Password.iconbitmap("image/seguridad.ico")
+		self.top_Password.title("Cambiar contraseña")
+		self.top_Password.grab_set()
+		style=ttk.Style()
+		style.configure("MyEntry.TEntry",padding=6,foreground="#0000ff")
+
+		font=('Comic Sans MS',12,'bold')
+		label=Label(self.top_Password,text="Password Actual",font=font)
+		label.grid(row=0,column=0,pady=5)
+		self.entry_passA=ttk.Entry(self.top_Password,style="MyEntry.TEntry")
+		self.entry_passA.grid(row=0,column=1)
+
+		label=Label(self.top_Password,text="Password Nuevo",font=font)
+		label.grid(row=1,column=0,pady=5)
+		self.entry_passN=ttk.Entry(self.top_Password,style="MyEntry.TEntry")
+		self.entry_passN.grid(row=1,column=1)
+
+		btn=ttk.Button(self.top_Password,text="Aceptar")
+		btn["command"]=self.event_PasswChage
+		btn.grid(row=2,column=0,columnspan=2)
+	def event_PasswChage(self):
+		A=self.entry_passA.get()
+		N=self.entry_passN.get()
+		nro=self.obj_consult.Update_Password(self.usuario_,self.dni_,A,N)
+		if nro==1:			
+			self.top_Password.destroy()
+			self.Ventana_Main.destroy()
+		else:
+			messagebox.showerror("Alerta","error, datos incorrectos")
+
+
+	def Frame_EspecialidadV(self):
+
+		self.Frame_Especialidad=Frame(self.Ventana_Main,width=int(self.width*0.99),height=int(self.height*0.99))
+		self.Frame_Especialidad.place(x=0,y=0)
+		self.Frame_Especialidad.grid_propagate(False)
+		style=ttk.Style()
+		style.configure("MyEntry.TEntry",padding=6,foreground="#0000ff")
+
+		font=('Comic Sans MS',18,'bold')
+		label=Label(self.Frame_Especialidad,text="LISTA DE SERVICIOS SERVICIOS",font=font)
+		label.grid(row=0,column=0,columnspan=10,pady=5)
+
+		font1=('Comic Sans MS',12,'bold')
+		btn_addEspecialidad=ttk.Button(self.Frame_Especialidad,text="Agregar Especialidad")
+		btn_addEspecialidad.config(command=self.Top_EspecialidadV)
+		btn_addEspecialidad.grid(row=3,column=4,pady=5)		
+
+		self.table_Especialidad=ttk.Treeview(self.Frame_Especialidad,height=5,columns=('#1','#2'),show='headings')		
+		self.table_Especialidad.heading("#1",text="CODIGO")
+		self.table_Especialidad.column("#1",width=100,anchor="w",stretch='NO')	
+		self.table_Especialidad.heading("#2",text="ESPECIALIDAD")
+		self.table_Especialidad.column("#2",width=400,anchor="w",stretch='NO')		
+		self.table_Especialidad.grid(row=6,column=0,columnspan=20,pady=5) 
+		self.table_Especialidad.configure(height=20)
+		self.llenar_tableEspecialidad()
+
+	def Top_EspecialidadV(self):
+		self.Top_Especialidad=Toplevel(self.Ventana_Main)
+		self.Top_Especialidad.geometry("500x150")
+		self.Top_Especialidad.iconbitmap("image/servicios.ico")
+		self.Top_Especialidad.title("Agregar Especialidad")
+		self.Top_Especialidad.resizable(0,0)
+		self.Top_Especialidad.grab_set()				
+		etiqueta=Label(self.Top_Especialidad,text="Codigo: ")
+		etiqueta.grid(row=1,column=0)
+		self.Entry_codigoEspecialidad=ttk.Entry(self.Top_Especialidad,style="MyEntry.TEntry")
+		self.Entry_codigoEspecialidad.grid(row=1,column=1)
+
+		etiqueta=Label(self.Top_Especialidad,text="Especialidad: ")
+		etiqueta.grid(row=1,column=2)
+		self.Entry_Especialidad=ttk.Entry(self.Top_Especialidad,style="MyEntry.TEntry")
+		self.Entry_Especialidad.grid(row=1,column=3)
+
+		btn=ttk.Button(self.Top_Especialidad,text="Agregar")
+		btn['command']=self.insert_EspecialidadV	
+		btn.grid(row=2,column=1,columnspan=2)
+	def llenar_tableEspecialidad(self):
+		rows=self.obj_consult.Query_Especialidad()
+		for val in rows:
+			self.table_Especialidad.insert("",'end',values=(val.CODSERVICIO,val.NOMBRE))
+
+	def insert_EspecialidadV(self):
+		codigo=self.Entry_codigoEspecialidad.get()
+		especialidad=self.Entry_Especialidad.get()
+		if len(codigo)==5:			
+			self.obj_consult.insert_Especialidad(codigo,especialidad)
+			self.Top_Especialidad.destroy()
+		else:
+			messagebox.showerror("Error","El codigo que contener como minimo 5 caracteres")			
 
 	def Frame_Usuarios(self):
 		self.Frame_Usuario=Frame(self.Ventana_Main,width=int(self.width*0.99),height=int(self.height*0.99))
@@ -143,6 +242,7 @@ class Ventana(object):
 			self.Top_UsuarioPASS=Toplevel(self.Ventana_Main)
 			self.Top_UsuarioPASS.geometry("300x150")
 			self.Top_UsuarioPASS.title("Modificar el Estado")
+			self.Top_UsuarioPASS.iconbitmap("image/seguridad.ico")
 			self.Top_UsuarioPASS.resizable(0,0)
 			self.Top_UsuarioPASS.grab_set()				
 			etiqueta=Label(self.Top_UsuarioPASS,text="Contraseña: ")
@@ -167,6 +267,7 @@ class Ventana(object):
 			self.Top_Usuario=Toplevel(self.Ventana_Main)
 			self.Top_Usuario.geometry("300x150")
 			self.Top_Usuario.title("Modificar el Estado")
+			self.Top_Usuario.iconbitmap("image/estado.ico")
 			self.Top_Usuario.resizable(0,0)
 			self.Top_Usuario.grab_set()				
 			etiqueta=Label(self.Top_Usuario,text="Estado: ")
@@ -282,8 +383,7 @@ class Ventana(object):
 		self.Combo_Especialidad.current(0)
 		btn_insertaEspecialista=ttk.Button(self.frame_Especialista,text="Insertar")	
 		btn_insertaEspecialista["command"]=self.insert_Medico
-		btn_insertaEspecialista.grid(row=4,column=2,pady=5)
-		
+		btn_insertaEspecialista.grid(row=4,column=2,pady=5)		
 
 
 		self.table_Especialista=ttk.Treeview(self.frame_Especialista,height=5,columns=('#1','#2','#3','#4'),show='headings')		
@@ -312,6 +412,7 @@ class Ventana(object):
 			self.Top_Especialista=Toplevel(self.Ventana_Main)
 			self.Top_Especialista.geometry("500x100")
 			self.Top_Especialista.title("Modificar al medico")
+			self.Top_Especialista.iconbitmap("image/medical.ico")
 			self.Top_Especialista.resizable(0,0)		
 			etiqueta=Label(self.Top_Especialista,text="DNI: ")
 			etiqueta.grid(row=1,column=0)
@@ -347,11 +448,12 @@ class Ventana(object):
 		for val in rows:
 			self.table_Especialista.insert("",'end',values=(val.DNI,val.NOMBRES,val.APELLIDOP+" "+val.APELLIDOM,val.NOMBRE))		
 
-	def insert_Medico(self):			
+	def insert_Medico(self):
+
 		dni_Especialista=self.Entry_DNIEspecialista.get()
 		nombre_Especialista=self.Entry_NOMBREEspecialista.get()
 		apellidop_Especialista=self.Entry_APEELIDOPEspecialista.get()
-		apellidom_Especialista=self.Entry_APEELIDOPEspecialista.get()
+		apellidom_Especialista=self.Entry_APEELIDOMEspecialista.get()
 		telefono_Especialista=self.Entry_TELEFONOEspecialista.get()
 		correo_Especialista=self.Entry_CORREOEspecialista.get()
 		especialidad_Especialista=self.Combo_Especialidad.get()[:self.Combo_Especialidad.get().find("_")]
@@ -456,8 +558,10 @@ class Ventana(object):
 	def Exportar_data(self):
 		if self.TListaHojas.selection():
 			codigo=self.TListaHojas.item(self.TListaHojas.selection()[0])['values'][0]			
+			file_Address=filedialog.asksaveasfile(mode="w",defaultextension=".xlsx")
+			
 			obj_report=reporte.Reporte()
-			aux=obj_report.Genera_RDatos(codigo)
+			aux=obj_report.Genera_RDatos(codigo,file_Address)
 			if aux:
 				messagebox.showinfo("Alerta","Se generó correctamente!!")
 			else:
@@ -622,7 +726,8 @@ class Ventana(object):
 	def ReportData(self,codigo):
 		obj_report=reporte.Reporte()
 		try:
-			aux=obj_report.Genera_RDatos(codigo)
+			file_Address=filedialog.asksaveasfile(mode="w",defaultextension=".xlsx")
+			aux=obj_report.Genera_RDatos(codigo,file_Address)
 			if aux:
 				messagebox.showinfo("Alerta","Se generó el archivo correctamente")
 			else:
@@ -667,16 +772,20 @@ class Ventana(object):
 		datos.append(Establecimiento)
 		datos.append(turno)
 		datos.append(self.dni_medico)
-		datos.append(self.servicio_)		
-		nro=self.obj_his.insertar_HISCAB(datos,self.dni_,self.servicio_)
-		self.llenar_table()
-		if nro==1:
-			messagebox.showinfo("Alerta","Se insertó correctamente!!")
-			self.Delete_()
+		datos.append(self.servicio_)
+		dat=datetime.now()
+		str_dat=dat.strftime("%d/%m/%y")
 
+		if str(fecha)==str_dat:			
+			nro=self.obj_his.insertar_HISCAB(datos,self.dni_,self.servicio_)
+			self.llenar_table()
+			if nro==1:
+				messagebox.showinfo("Alerta","Se insertó correctamente!!")
+				self.Delete_()
+			else:
+				messagebox.showinfo("Alerta","No pudo agregarse!!")
 		else:
-			messagebox.showinfo("Alerta","No pudo agregarse!!")
-
+			messagebox.showerror("Alerta","No puede crear para esta fecha!!")
 
 	def data_cabecera(self,event):
 		self.dni_medico=self.entry_Dni.get()		
@@ -704,6 +813,7 @@ class Ventana(object):
 		self.combo_ServicioL["values"]=valores
 
 	def event_ComboServicio(self,event):
+
 		fecha_=self.dateL.get()
 		servicio=self.combo_ServicioL.get()
 		rows=self.obj_consult.ServiciosVar(servicio[:servicio.find("_")],fecha_)
@@ -711,7 +821,7 @@ class Ventana(object):
 		for item in self.TListaHojas.get_children():
 			self.TListaHojas.delete(item)
 		for val in rows:
-			self.TListaHojas.insert('','end',values=(val.CODCABECERA,val.NOMBRES+" "+val.APELLIDOP+" "+val.APELLIDOM,val.ESTABLECIMIENTO,val.TURNO,val.CODSERVICIO,val.FECHA))
+			self.TListaHojas.insert('','end',values=(val.CODCABECERA,val.NOMBRES+" "+val.APELLIDOP+" "+val.APELLIDOM,val.ESTABLECIMIENTO,val.TURNO,val.NOMBRE,val.FECHA))
 
 	def event_focus(self,event):
 		self.entry_Dni.delete(0,"end")

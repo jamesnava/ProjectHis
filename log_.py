@@ -26,10 +26,10 @@ class Login():
 		self.mainFrame.config()	
 		self.mainFrame.pack()
 		self.mainFrame.config(width=500,height=400)
-		titulo=Label(self.mainFrame,text='INICIAR SESIÓN',font=("Arial-bold",24),fg='black')
+		titulo=Label(self.mainFrame,text='INICIAR SESIÓN',font=('Comic Sans MS',24,'bold'),fg='purple')
 		titulo.grid(column=0,row=0,columnspan=2)
 
-		log_image=PhotoImage(file='image/administrativo.png')
+		log_image=PhotoImage(file='image/log.png')
 		Label_image=Label(self.mainFrame,image=log_image)
 		#Label_image=Label(self.mainFrame)
 		Label_image.grid(row=1,column=0,columnspan=2,pady=10)

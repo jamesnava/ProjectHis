@@ -64,6 +64,7 @@ class HIS(object):
 		self.TopInsert=Toplevel(ventana)
 		self.TopInsert.geometry("950x700")
 		self.TopInsert.title("Ingresar Pacientes")
+		self.TopInsert.iconbitmap("image/paciente.ico")
 		self.TopInsert.resizable(0,0)
 		self.TopInsert.grab_set()
 		style=ttk.Style()
@@ -280,12 +281,12 @@ class HIS(object):
 
 	def Top_searchCie(self,event):
 		self.TopCIE=Toplevel(self.TopInsert)
-		self.TopCIE.title('Diagnosticos')
-		#self.TopCIE.iconbitmap('img/centro.ico')
+		self.TopCIE.title('Diagnosticos')		
 		self.TopCIE.geometry("720x400+350+50")
 		self.TopCIE.focus_set()	
 		self.TopCIE.grab_set()
 		self.TopCIE.resizable(0,0)	
+		self.TopCIE.iconbitmap('image/diagnostico.ico')
 
 		label_title=Label(self.TopCIE,text='Buscar')
 		label_title.place(x=20,y=20)
@@ -418,6 +419,7 @@ class HIS(object):
 		self.Top_Editar=Toplevel(ventana)
 		self.Top_Editar.geometry("750x600")
 		self.Top_Editar.title("Datos de Paciente")
+		self.Top_Editar.iconbitmap('img/paciente.ico')
 		self.Top_Editar.resizable(0,0)
 		self.Top_Editar.grab_set()
 
@@ -516,6 +518,7 @@ class HIS(object):
 	def top_EditarCie(self,event):
 		self.top_EditarC=Toplevel(self.Top_Editar)
 		self.top_EditarC.title("Buscar Diagnostico")
+		self.top_EditarC.iconbitmap('img/buscar.ico')
 		self.top_EditarC.geometry("700x100")
 		self.top_EditarC.resizable(0,0)
 		self.top_EditarC.grab_set()

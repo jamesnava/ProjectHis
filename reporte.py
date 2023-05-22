@@ -9,16 +9,16 @@ class Reporte(object):
 		double_border_side=Side(border_style="thin")
 		self.borde_caja=Border(top=double_border_side,right=double_border_side,bottom=double_border_side,left=double_border_side)
 		self.obj_consulta=Consulta_doc.Querys()
-	def Genera_RDatos(self,codigo):
+	def Genera_RDatos(self,codigo,address):
 		aux=False
 		rows=self.obj_consulta.datos_HojaV2(codigo)		
 		if len(rows)>0:
-			self.Report_DigitD(rows)
+			self.Report_DigitD(rows,address)
 			aux=True
 		else:
 			aux=False
 		return aux
-	def Report_DigitD(self,rows):
+	def Report_DigitD(self,rows,address):
 
 		wb=Workbook()
 		sheet=wb.active
@@ -145,6 +145,7 @@ class Reporte(object):
 				sheet['Q'+str(nro+numeracion)]=dx.CODCIE
 				numeracion=numeracion+1
 
-			nro=nro+numeracion+1		
-		wb.save("ejemplo.xlsx")
+			nro=nro+numeracion+1
+			
+		wb.save(f"{address.name}")
 
